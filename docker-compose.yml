@@ -1,0 +1,36 @@
+version: '3'
+
+networks:
+  auction-api-network:
+
+services:
+  auction_api_app:
+    container_name: auction-api-app
+    platform: linux/amd64
+    build: ./.docker/local/go
+    ports:
+      - 8080:8081
+    env_file:
+      - ./.docker/local/.env
+    volumes:
+      - .:/go-workspace/src/github.com/ashishkumar68/auction-api
+    links:
+      - auction_api_db
+    networks:
+      - auction-api-network
+    hostname: auction_api_app
+
+  auction_api_db:
+    container_name: auction-api-db
+    image: mysql:5.7
+    command: --default-authentication-plugin=mysql_native_password
+    platform: linux/amd64
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_USER: auction_api_app
+      MYSQL_PASSWORD: changeme
+      MYSQL_ROOT_PASSWORD: changeme
+      MYSQL_DATABASE: auction
+    networks:
+      - auction-api-network
