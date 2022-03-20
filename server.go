@@ -11,6 +11,7 @@ import (
 
 func SetupRoutes(engine *gin.Engine) {
 	routes.MapIndexRoutes(engine)
+	routes.MapAuthRoutes(engine)
 }
 
 func runMigrations() {

@@ -1,0 +1,4 @@
+//+build wireinject
+
+package commands
+

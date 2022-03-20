@@ -46,7 +46,7 @@ func (identity *Identity) BeforeCreate(tx *gorm.DB) (err error) {
 type CreatedMetaInfo struct {
 	CreatedAt		time.Time	`gorm:"name:created_at;type:datetime;autoCreateTime:milli" json:"createdAt"`
 	CreatedBy		*uint		`gorm:"name:created_by;index"`
-	CreatedByUser	*User		`gorm:"foreignKey:CreatedBy" json:"createdBy"`
+	CreatedByUser	*User		`gorm:"foreignKey:CreatedBy" json:"createdBy,omitempty"`
 }
 
 func (info CreatedMetaInfo) GetCreatedAt() time.Time {
@@ -56,13 +56,13 @@ func (info CreatedMetaInfo) GetCreatedAt() time.Time {
 type UpdatedMetaInfo struct {
 	UpdatedAt		time.Time	`gorm:"name:updated_at;type:datetime;autoUpdateTime:milli" json:"updatedAt"`
 	UpdatedBy		*uint		`gorm:"name:updated_by;index"`
-	UpdatedByUser	*User		`gorm:"foreignKey:UpdatedBy" json:"updatedBy"`
+	UpdatedByUser	*User		`gorm:"foreignKey:UpdatedBy" json:"updatedBy,omitempty"`
 }
 
 type DeletedMetaInfo struct {
 	DeletedAt		*time.Time	`gorm:"name:deleted_at;type:datetime" json:"deletedAt"`
 	DeletedBy		*uint		`gorm:"name:deleted_by"`
-	DeletedByUser	*User		`gorm:"foreignKey:DeletedBy" json:"deletedBy"`
+	DeletedByUser	*User		`gorm:"foreignKey:DeletedBy" json:"deletedBy,omitempty"`
 }
 
 func (val DeletedMetaInfo) IsDeleted() bool {
@@ -70,12 +70,12 @@ func (val DeletedMetaInfo) IsDeleted() bool {
 }
 
 type ActionedMetaInfo struct {
-	ActionedAt	time.Time	`gorm:"name:actioned_at;type:datetime" json:"actionedAt"`
-	CycledAt	time.Time	`gorm:"name:cycled_at;type:datetime" json:"cycledAt"`
+	ActionedAt	time.Time	`gorm:"name:actioned_at;type:datetime" json:"actionedAt,omitempty"`
+	CycledAt	time.Time	`gorm:"name:cycled_at;type:datetime" json:"cycledAt,omitempty"`
 }
 
 type RequestedMetaInfo struct {
-	RequestedAt time.Time `gorm:"name:requested_at;type:datetime" json:"requestedAt"`
+	RequestedAt time.Time `gorm:"name:requested_at;type:datetime" json:"requestedAt,omitempty"`
 }
 
 type VersionMetaInfo struct {

@@ -7,11 +7,30 @@ type User struct {
 	DeletedMetaInfo
 	VersionMetaInfo
 
+
 	FirstName		string	`gorm:"type:varchar(512)" json:"firstName"`
 	LastName		string	`gorm:"type:varchar(512)" json:"lastName"`
 	Email			string	`gorm:"type:varchar(512)" json:"email"`
-	plainPassword	string
+	PlainPassword	string	`gorm:"-" json:"-"`
 	Password		string  `gorm:"type:varchar(2048)" json:"-"`
 	IsActive		bool	`gorm:"type:tinyint(1)" json:"isActive"`
 }
 
+func NewUserFromValues(
+	firstName string,
+	lastName string,
+	email string,
+	plainPass string) *User {
+
+	return &User{
+		FirstName: firstName,
+		LastName: lastName,
+		Email: email,
+		PlainPassword: plainPass,
+		IsActive: false,
+	}
+}
+
+func (user User) IsZero() bool {
+	return user == User{}
+}

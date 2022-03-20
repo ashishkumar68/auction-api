@@ -2,7 +2,7 @@
 
 set -e
 
-sleep 5
+sleep 3
 
 go mod vendor
 

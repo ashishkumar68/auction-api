@@ -6,15 +6,17 @@ networks:
 services:
   auction_api_app:
     container_name: auction-api-app
-    platform: linux/amd64
     build: ./.docker/local/go
     ports:
-      - 8080:8081
+      - "8080:8081"
+      - "2345:2345"
     env_file:
       - ./.docker/local/.env
     volumes:
       - .:/go-workspace/src/github.com/ashishkumar68/auction-api
     links:
+      - auction_api_db
+    depends_on:
       - auction_api_db
     networks:
       - auction-api-network

@@ -2,7 +2,12 @@ package commands
 
 import (
 	"context"
+	"fmt"
+	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/repositories"
+	"github.com/ashishkumar68/auction-api/services"
+	"github.com/gogolfing/cbus"
+	"log"
 )
 
 type RegisterNewUserCommand struct {
@@ -12,11 +17,30 @@ type RegisterNewUserCommand struct {
 	Password	string	`json:"password" binding:"required,min=8,max=80"`
 }
 
-type RegisterNewUserHandler struct {
-	userRepository *repositories.UserRepository
+func (cmd *RegisterNewUserCommand) Type() string {
+	return "RegisterNewUser"
 }
 
-func (handler *RegisterNewUserHandler) Handle(ctx context.Context, command *RegisterNewUserCommand) error {
+func RegisterNewUserHandler(ctx context.Context, command cbus.Command) (interface{}, error) {
+	registerUserCmd := command.(*RegisterNewUserCommand)
+	newUser := models.NewUserFromValues(
+		registerUserCmd.FirstName,
+		registerUserCmd.LastName,
+		registerUserCmd.Email,
+		registerUserCmd.Password)
+	hashedPass, err := services.HashPassword(newUser.PlainPassword)
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not hashed password while saving user information."))
+		log.Println("err:", err)
+		return nil, err
+	}
+	newUser.Password = hashedPass
+	err = repositories.NewUserRepository().Save(newUser)
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not save user information."))
+		log.Println("err:", err)
+		return nil, err
+	}
 
-	return nil
+	return newUser, nil
 }
