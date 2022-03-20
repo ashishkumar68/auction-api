@@ -18,10 +18,10 @@ func InitUserRepository(conn *gorm.DB) *UserRepository {
 }
 
 func (repo *UserRepository) Find(id int32) *models.User {
-	var user *models.User
+	var user models.User
 	repo.connection.Find(&user, id)
 
-	return user
+	return &user
 }
 
 func (repo *UserRepository) Save(user *models.User) error {

@@ -42,4 +42,3 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 WORKDIR ${PROJECTDIR}
 CMD ["air"]
-#CMD ["/dlv", "--listen=:${DELVE_PORT}", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "./tmp/main"]
