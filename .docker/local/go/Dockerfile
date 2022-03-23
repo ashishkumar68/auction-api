@@ -1,5 +1,7 @@
 FROM golang:1.18
 
+ARG AIR_FILE_NAME=".air.toml"
+
 RUN buildDeps=" \
         lsb-release \
     " \
@@ -20,11 +22,12 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt install -y mariadb-clie
 ENV GOPATH='/go-workspace'
 ENV GOBIN=${GOPATH}/bin
 ENV GOSRC=${GOPATH}/src
-ENV PROJECTDIR=${GOSRC}/github.com/ashishkumar68/auction-api
+ENV PROJECTDIR=${GOSRC}/auction-api
 # add go bin to path, this is required to run go binaries.
 ENV PATH=$PATH:${GOBIN}
 ENV CGO_ENABLED 0
 ENV DELVE_PORT 2345
+ENV AIR_FILE_NAME ${AIR_FILE_NAME}
 
 RUN mkdir -p ${GOPATH}/bin/
 RUN mkdir -p ${GOPATH}/pkg/
@@ -41,4 +44,4 @@ RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 WORKDIR ${PROJECTDIR}
-CMD ["air"]
+CMD air -c ${AIR_FILE_NAME}

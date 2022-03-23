@@ -13,14 +13,14 @@ services:
     env_file:
       - ./.docker/local/.env
     volumes:
-      - .:/go-workspace/src/github.com/ashishkumar68/auction-api
+      - .:/go-workspace/src/auction-api
     links:
       - auction_api_db
     depends_on:
       - auction_api_db
     networks:
       - auction-api-network
-    hostname: auction_api_app
+    hostname: test.auction-api.com
 
   auction_api_db:
     container_name: auction-api-db

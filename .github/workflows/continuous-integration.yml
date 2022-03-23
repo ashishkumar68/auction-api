@@ -1,0 +1,16 @@
+name: "Continuous Integration"
+
+on: [ push ]
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo.
+        uses: actions/checkout@v2
+      - name: Building containers.
+        run: docker-compose up -d --build --force-recreate
+      - name: Wait for sometime until containers are ready.
+        run: sleep 25
+      - name: Run unit tests.
+        run: docker container exec auction-api-app bash-scripts/run-unit-tests.sh

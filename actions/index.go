@@ -6,7 +6,5 @@ import (
 )
 
 func IndexAction(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"Index": "OK",
-	})
+	c.JSON(http.StatusOK, gin.H{})
 }
