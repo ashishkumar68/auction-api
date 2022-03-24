@@ -23,7 +23,6 @@ func main() {
 	engine := gin.Default()
 	_ = engine.SetTrustedProxies(nil)
 	runMigrations()
-
 	// setting up routes.
 	SetupRoutes(engine)
 
