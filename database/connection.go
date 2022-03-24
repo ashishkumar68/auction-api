@@ -6,17 +6,26 @@ import (
 	"gorm.io/gorm/logger"
 	"log"
 	"os"
+	"sync"
 )
 
 var db *gorm.DB
+var ProdDBConfig *gorm.Config
+var once sync.Once
 
-func NewConnection() *gorm.DB {
+func init() {
+	once.Do(func() {
+		ProdDBConfig = &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		}
+	})
+}
+
+func NewConnection(config *gorm.Config) *gorm.DB {
 	if db != nil {
 		return db
 	}
-	db, err := gorm.Open(mysql.Open(os.Getenv("DB_DSN")), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
-	})
+	db, err := gorm.Open(mysql.Open(os.Getenv("DB_DSN")), config)
 	if err != nil {
 		log.Fatalln("could not create new database connection", err)
 	}
