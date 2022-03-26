@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"github.com/ashishkumar68/auction-api/database"
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/repositories"
 	"github.com/ashishkumar68/auction-api/services"
@@ -36,7 +35,7 @@ func RegisterNewUserHandler(ctx context.Context, command cbus.Command) (interfac
 		return nil, err
 	}
 	newUser.Password = hashedPass
-	err = repositories.NewUserRepository(database.ProdDBConfig).Save(newUser)
+	err = repositories.NewUserRepository().Save(newUser)
 	if err != nil {
 		log.Println(fmt.Sprintf("Could not save user information."))
 		log.Println("err:", err)

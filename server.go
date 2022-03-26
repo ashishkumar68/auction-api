@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/ashishkumar68/auction-api/config"
 	"github.com/ashishkumar68/auction-api/migrations"
 	"github.com/ashishkumar68/auction-api/routes"
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,7 @@ func runMigrations() {
 }
 
 func main() {
+	config.InitialiseConfig()
 	// creating gin engine.
 	engine := gin.Default()
 	_ = engine.SetTrustedProxies(nil)

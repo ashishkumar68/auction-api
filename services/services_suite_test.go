@@ -1,4 +1,4 @@
-package user
+package services
 
 import (
 	"github.com/ashishkumar68/auction-api/config"
@@ -11,5 +11,5 @@ func TestIndex(t *testing.T) {
 	config.InitialiseConfig()
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "User Suite")
+	RunSpecs(t, "Services Suite")
 }

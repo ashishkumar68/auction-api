@@ -8,7 +8,7 @@ import (
 )
 
 func DropAndCreateTables() {
-	db := database.NewConnection(database.ProdDBConfig)
+	db := database.NewConnection()
 
 	db.Exec("SET foreign_key_checks = 0;")
 	if err := db.Migrator().DropTable(

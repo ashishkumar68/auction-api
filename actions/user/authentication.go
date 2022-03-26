@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"github.com/ashishkumar68/auction-api/commands"
-	"github.com/ashishkumar68/auction-api/database"
 	"github.com/ashishkumar68/auction-api/repositories"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -22,7 +21,7 @@ func RegisterUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if !repositories.NewUserRepository(database.ProdDBConfig).FindByEmail(registerUserCmd.Email).IsZero() {
+	if !repositories.NewUserRepository().FindByEmail(registerUserCmd.Email).IsZero() {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": AccountWithEmailExists,
 			"email": registerUserCmd.Email,

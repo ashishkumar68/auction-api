@@ -9,7 +9,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"io"
 	"net/http"
 	"os"
@@ -32,12 +31,8 @@ var _ = Describe("Auth Tests", func() {
 	registerRoute := fmt.Sprintf("%s://%s:%s%s/register", protocol, host, port, prefix)
 	contentTypeJson := "application/json"
 	var dbConnection *gorm.DB
-	config := &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
-		PrepareStmt: false,
-	}
 	cleanUpTables := func() {
-		dbConnection = database.NewConnection(config)
+		dbConnection = database.NewConnection()
 		dbConnection.Exec(`SET foreign_key_checks = 0;`)
 		dbConnection.Exec(`TRUNCATE TABLE users;`)
 		dbConnection.Exec(`TRUNCATE TABLE items;`)

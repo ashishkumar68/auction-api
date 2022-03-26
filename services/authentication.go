@@ -19,8 +19,8 @@ const (
 
 var (
 	tokenTypeExpiryMap = gin.H{
-		TokenTypeAccess: time.Duration(time.Minute * 60), // 60 minutes
-		TokenTypeRefresh: time.Duration(time.Hour * 24 * 60), // 60 days
+		TokenTypeAccess:	time.Minute * 60, // 60 minutes
+		TokenTypeRefresh:	time.Hour * 24 * 60, // 60 days
 	}
 )
 
@@ -38,9 +38,9 @@ func CompareHashAndPass(hash string, pass string) bool {
 	return nil == bcrypt.CompareHashAndPassword([]byte(hash), []byte(pass))
 }
 
-func CreateNewJwtToken(id HasLoginIdentity, tokenType string) (string, error) {
+func GenerateNewJwtToken(id HasLoginIdentity, tokenType string) (string, error) {
 	iat := jwt.NewNumericDate(time.Now())
-	nbf := jwt.NewNumericDate(time.Now().Add(time.Second))
+	nbf := jwt.NewNumericDate(time.Now())
 	exp := jwt.NewNumericDate(time.Now().Add(tokenTypeExpiryMap[tokenType].(time.Duration)))
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
@@ -67,7 +67,8 @@ func VerifyJwtToken(token string) (*jwt.Token, error) {
 		log.Println(err)
 		return nil, err
 	}
-	if _, ok := parsedToken.Claims.(jwt.RegisteredClaims); ok && parsedToken.Valid {
+
+	if _, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
 		return parsedToken, nil
 	}
 
