@@ -7,4 +7,5 @@ import (
 
 func MapAuthRoutes(engine *gin.Engine) {
 	engine.POST("/api/register", user.RegisterUser)
+	engine.POST("/api/login", user.LoginUser)
 }

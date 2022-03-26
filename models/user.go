@@ -34,3 +34,7 @@ func NewUserFromValues(
 func (user User) IsZero() bool {
 	return user == User{}
 }
+
+func (user User) GetLoginId() string {
+	return user.Email
+}

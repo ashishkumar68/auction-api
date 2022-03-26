@@ -13,6 +13,7 @@ import (
 var (
 	InternalServerErrMsg	= "Something went wrong, sorry please try again later."
 	AccountWithEmailExists	= "Sorry! a user with this email already exists"
+	InvalidCredentials		= "Invalid credentials were found."
 )
 
 func RegisterUser(c *gin.Context) {
@@ -31,7 +32,6 @@ func RegisterUser(c *gin.Context) {
 
 	bus := commands.NewCommandBus()
 	user, err := bus.ExecuteContext(context.Background(), &registerUserCmd)
-	//user, err := bus.Execute(&registerUserCmd)
 	if err != nil {
 		log.Println("Could not save user")
 		log.Println("err:", err)
@@ -40,4 +40,22 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, user)
+}
+
+func LoginUser(c *gin.Context) {
+	var loginUserCmd commands.LoginUserCommand
+	if err := c.ShouldBindJSON(&loginUserCmd); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	bus := commands.NewCommandBus()
+	loggedInUser, err := bus.ExecuteContext(context.Background(), &loginUserCmd)
+	if err != nil {
+		log.Println("Could not login user")
+		log.Println("err:", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": InvalidCredentials})
+		return
+	}
+
+	c.JSON(http.StatusOK, loggedInUser)
 }
