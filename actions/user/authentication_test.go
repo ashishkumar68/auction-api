@@ -70,7 +70,7 @@ var _ = Describe("Auth Tests", func() {
 				Expect(registerResponse.FirstName).To(Equal("John"))
 				Expect(registerResponse.LastName).To(Equal("Doe"))
 				Expect(registerResponse.Email).To(Equal("johndoe123@abc.com"))
-				Expect(registerResponse.IsActive).To(Equal(false))
+				Expect(registerResponse.IsActive).To(Equal(true))
 
 				var user models.User
 				dbConnection.Where("email = ? AND deleted_at IS NULL", email).First(&user)

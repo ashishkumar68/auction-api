@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ashishkumar68/auction-api/commands"
 	"github.com/ashishkumar68/auction-api/repositories"
+	"github.com/ashishkumar68/auction-api/services"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -52,7 +53,13 @@ func LoginUser(c *gin.Context) {
 	if err != nil {
 		log.Println("Could not login user")
 		log.Println("err:", err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": InvalidCredentials})
+		if err == services.PasswordsDontMatch {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": InvalidCredentials})
+		} else if err == services.UserEmailDoesntExist {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": InternalServerErrMsg})
+		}
 		return
 	}
 

@@ -3,7 +3,10 @@ package commands
 import (
 	"context"
 	"github.com/ashishkumar68/auction-api/models"
+	"github.com/ashishkumar68/auction-api/repositories"
+	"github.com/ashishkumar68/auction-api/services"
 	"github.com/gogolfing/cbus"
+	"log"
 )
 
 type LoginUserCommand struct {
@@ -17,8 +20,29 @@ func (cmd *LoginUserCommand) Type() string {
 
 func LoginUserHandler(ctx context.Context, command cbus.Command) (interface{}, error) {
 	var user models.LoggedInUser
-	_ = command.(*LoginUserCommand)
-
+	cmd := command.(*LoginUserCommand)
+	existingUser := repositories.NewUserRepository().FindByEmail(cmd.Email)
+	if existingUser.IsZero() {
+		return nil, services.UserEmailDoesntExist
+	}
+	if !services.CompareHashAndPass(existingUser.Password, cmd.Password) {
+		return nil, services.PasswordsDontMatch
+	}
+	user = models.CreateLoggedInUserByUser(*existingUser)
+	accessToken, err := services.GenerateNewJwtToken(*existingUser, services.TokenTypeAccess)
+	if err != nil {
+		log.Println("could not create new JWT access token")
+		log.Println(err)
+		return nil, err
+	}
+	refreshToken, err := services.GenerateNewJwtToken(*existingUser, services.TokenTypeRefresh)
+	if err != nil {
+		log.Println("could not create new JWT refresh token")
+		log.Println(err)
+		return nil, err
+	}
+	user.AccessToken = accessToken
+	user.RefreshToken = refreshToken
 
 	return user, nil
 }

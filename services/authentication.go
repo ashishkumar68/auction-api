@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -22,6 +23,8 @@ var (
 		TokenTypeAccess:	time.Minute * 60, // 60 minutes
 		TokenTypeRefresh:	time.Hour * 24 * 60, // 60 days
 	}
+	UserEmailDoesntExist	= errors.New("user account with this email doesn't exist")
+	PasswordsDontMatch		= errors.New("provided password doesn't match with actual password")
 )
 
 type HasLoginIdentity interface {

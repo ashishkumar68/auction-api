@@ -13,8 +13,8 @@ type LoggedInUser struct {
 	RefreshToken	string	`json:"refreshToken"`
 }
 
-func CreateLoggedInUserByUser(user User) *LoggedInUser {
-	return &LoggedInUser{
+func CreateLoggedInUserByUser(user User) LoggedInUser {
+	return LoggedInUser{
 		Identity: Identity{
 			ID:   user.ID,
 			Uuid: user.Uuid,

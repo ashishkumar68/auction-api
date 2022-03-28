@@ -27,7 +27,8 @@ func NewUserFromValues(
 		LastName: lastName,
 		Email: email,
 		PlainPassword: plainPass,
-		IsActive: false,
+		// TODO: Currently setting user active by default but it needs to be email verified to get activated.
+		IsActive: true,
 	}
 }
 
