@@ -54,6 +54,7 @@ func GenerateNewJwtToken(id HasLoginIdentity, tokenType string) (string, error) 
 		IssuedAt:  iat,
 		ID:        uuid.NewString(),
 	})
+	token.Header["username"] = id.GetLoginId()
 
 	return token.SignedString([]byte(os.Getenv("JWT_HS256_KEY")))
 }

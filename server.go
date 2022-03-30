@@ -11,8 +11,10 @@ import (
 )
 
 func SetupRoutes(engine *gin.Engine) {
+	apiGroup := engine.Group("/api", routes.AuthenticatedRoute())
 	routes.MapIndexRoutes(engine)
-	routes.MapAuthRoutes(engine)
+	routes.MapAuthRoutes(apiGroup)
+	routes.MapItemRoutes(apiGroup)
 }
 
 func runMigrations() {

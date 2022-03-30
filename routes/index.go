@@ -8,3 +8,10 @@ import (
 func MapIndexRoutes(engine *gin.Engine) {
 	engine.GET("/", actions.IndexAction)
 }
+
+var (
+	AnonymousRoutes = gin.H{
+		"/api/login": true,
+		"/api/register": true,
+	}
+)
