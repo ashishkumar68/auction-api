@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"github.com/ashishkumar68/auction-api/database"
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/google/uuid"
@@ -12,7 +13,7 @@ import (
 var _ = Describe("Authentication service tests", func() {
 	var dbConnection *gorm.DB
 	cleanUpTables := func() {
-		dbConnection = database.NewConnection()
+		dbConnection = database.NewConnectionWithContext(context.TODO())
 		dbConnection.Exec(`SET foreign_key_checks = 0;`)
 		dbConnection.Exec(`TRUNCATE TABLE users;`)
 		dbConnection.Exec(`TRUNCATE TABLE items;`)
@@ -24,7 +25,7 @@ var _ = Describe("Authentication service tests", func() {
 		})
 		It("Should generate new JWT token for user which can be verified successfully.", func() {
 			user := models.User{
-				Identity: models.Identity{
+				BaseModel: models.BaseModel{
 					ID: 1,
 					Uuid: uuid.NewString(),
 				},

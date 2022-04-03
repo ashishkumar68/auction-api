@@ -6,10 +6,13 @@ import (
 	"github.com/ashishkumar68/auction-api/repositories"
 	"github.com/ashishkumar68/auction-api/services"
 	"github.com/gogolfing/cbus"
+	"gorm.io/gorm"
 	"log"
 )
 
 type LoginUserCommand struct {
+	DB *gorm.DB
+
 	Email		string	`json:"email" binding:"required"`
 	Password	string	`json:"password" binding:"required"`
 }
@@ -21,7 +24,7 @@ func (cmd *LoginUserCommand) Type() string {
 func LoginUserHandler(ctx context.Context, command cbus.Command) (interface{}, error) {
 	var user models.LoggedInUser
 	cmd := command.(*LoginUserCommand)
-	existingUser := repositories.NewUserRepository().FindByEmail(cmd.Email)
+	existingUser := repositories.NewUserRepository(cmd.DB).FindByEmail(cmd.Email)
 	if existingUser.IsZero() {
 		return nil, services.UserEmailDoesntExist
 	}

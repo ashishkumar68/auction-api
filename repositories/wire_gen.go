@@ -7,13 +7,17 @@
 package repositories
 
 import (
-	"github.com/ashishkumar68/auction-api/database"
+	"gorm.io/gorm"
 )
 
 // Injectors from di_container.go:
 
-func NewUserRepository() *UserRepository {
-	db := database.NewConnection()
-	userRepository := InitUserRepository(db)
+func NewUserRepository(conn *gorm.DB) *UserRepository {
+	userRepository := InitUserRepository(conn)
 	return userRepository
+}
+
+func NewItemRepository(conn *gorm.DB) *ItemRepository {
+	itemRepository := InitItemRepository(conn)
+	return itemRepository
 }

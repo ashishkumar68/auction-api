@@ -3,12 +3,18 @@
 package repositories
 
 import (
-	"github.com/ashishkumar68/auction-api/database"
 	"github.com/google/wire"
+	"gorm.io/gorm"
 )
 
-func NewUserRepository() *UserRepository {
-	wire.Build(database.NewConnection, InitUserRepository)
+func NewUserRepository(conn *gorm.DB) *UserRepository {
+	wire.Build(InitUserRepository)
+
+	return nil
+}
+
+func NewItemRepository(conn *gorm.DB) *ItemRepository {
+	wire.Build(InitItemRepository)
 
 	return nil
 }

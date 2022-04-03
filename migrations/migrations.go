@@ -1,6 +1,7 @@
 package migrations
 
 import (
+	"context"
 	"fmt"
 	"github.com/ashishkumar68/auction-api/database"
 	"github.com/ashishkumar68/auction-api/models"
@@ -8,7 +9,7 @@ import (
 )
 
 func DropAndCreateTables() {
-	db := database.NewConnection()
+	db := database.NewConnectionWithContext(context.TODO())
 
 	db.Exec("SET foreign_key_checks = 0;")
 	if err := db.Migrator().DropTable(

@@ -1,10 +1,7 @@
 package models
 
 type LoggedInUser struct {
-	Identity
-	CreatedMetaInfo
-	UpdatedMetaInfo
-	VersionMetaInfo
+	BaseModel
 
 	FirstName		string	`json:"firstName"`
 	LastName		string	`json:"lastName"`
@@ -15,15 +12,11 @@ type LoggedInUser struct {
 
 func CreateLoggedInUserByUser(user User) LoggedInUser {
 	return LoggedInUser{
-		Identity: Identity{
+		BaseModel: BaseModel{
 			ID:   user.ID,
 			Uuid: user.Uuid,
-		},
-		CreatedMetaInfo: CreatedMetaInfo{
 			CreatedAt: user.CreatedAt,
 			CreatedBy: user.CreatedBy,
-		},
-		UpdatedMetaInfo: UpdatedMetaInfo{
 			UpdatedAt: user.UpdatedAt,
 			UpdatedBy: user.UpdatedBy,
 		},

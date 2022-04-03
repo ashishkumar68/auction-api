@@ -7,10 +7,13 @@ import (
 	"github.com/ashishkumar68/auction-api/repositories"
 	"github.com/ashishkumar68/auction-api/services"
 	"github.com/gogolfing/cbus"
+	"gorm.io/gorm"
 	"log"
 )
 
 type RegisterNewUserCommand struct {
+	DB *gorm.DB
+
 	FirstName	string	`json:"firstName" binding:"required,min=3,max=200"`
 	LastName	string	`json:"lastName" binding:"required,min=3,max=200"`
 	Email		string	`json:"email" binding:"required,min=3,max=200,email"`
@@ -35,7 +38,7 @@ func RegisterNewUserHandler(ctx context.Context, command cbus.Command) (interfac
 		return nil, err
 	}
 	newUser.Password = hashedPass
-	err = repositories.NewUserRepository().Save(newUser)
+	err = repositories.NewUserRepository(registerUserCmd.DB).Save(&newUser)
 	if err != nil {
 		log.Println(fmt.Sprintf("Could not save user information."))
 		log.Println("err:", err)

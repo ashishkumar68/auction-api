@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/ashishkumar68/auction-api/config"
+	"github.com/ashishkumar68/auction-api/middleware"
 	"github.com/ashishkumar68/auction-api/migrations"
 	"github.com/ashishkumar68/auction-api/routes"
 	"github.com/gin-gonic/gin"
@@ -11,7 +12,11 @@ import (
 )
 
 func SetupRoutes(engine *gin.Engine) {
-	apiGroup := engine.Group("/api", routes.AuthenticatedRoute())
+	apiGroup := engine.Group(
+		"/api",
+		middleware.AssignNewDatabaseConnection(),
+		middleware.AuthenticatedRoute(),
+	)
 	routes.MapIndexRoutes(engine)
 	routes.MapAuthRoutes(apiGroup)
 	routes.MapItemRoutes(apiGroup)
