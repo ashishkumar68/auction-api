@@ -1,12 +1,13 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/ashishkumar68/auction-api/actions"
+	"github.com/ashishkumar68/auction-api/database"
 	"github.com/ashishkumar68/auction-api/repositories"
 	"github.com/ashishkumar68/auction-api/routes"
 	"github.com/ashishkumar68/auction-api/services"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"strings"
@@ -14,19 +15,16 @@ import (
 
 func AuthenticatedRoute() gin.HandlerFunc {
 	return func (c *gin.Context) {
-		var dbConnection *gorm.DB
-		if db, ok := c.Get("db"); ok {
-			dbConnection = db.(*gorm.DB)
-		}
+		dbConnection := database.NewConnectionWithContext(c)
 		if _, ok := routes.AnonymousRoutes[c.Request.RequestURI]; ok {
+			c.Set("db", dbConnection)
 			c.Next()
 			return
 		}
 		tokenString := strings.Trim(c.Request.Header.Get("Authorization"), "")
 		token, err := services.VerifyJwtToken(tokenString)
 		if err != nil {
-			log.Println("Could not verify auth token")
-			log.Println(err)
+			log.Println(fmt.Sprintf("Could not verify auth token, err: %s", err))
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": actions.InvalidCredentials})
 			return
 		}
@@ -37,8 +35,10 @@ func AuthenticatedRoute() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": actions.InvalidCredentials})
 			return
 		}
+		dbConnection = dbConnection.Set("actionUser", *loggedInUser)
+		// set logged-in user and db connection to context to be used in further handlers.
 		c.Set("actionUser", loggedInUser)
-		dbConnection.Set("actionUser", loggedInUser)
+		c.Set("db", dbConnection)
 
 		c.Next()
 	}

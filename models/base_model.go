@@ -3,7 +3,6 @@ package models
 import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"log"
 	"time"
 )
 
@@ -12,18 +11,18 @@ type BaseModel struct {
 	Uuid	string	`gorm:"name:uuid;type:varchar(36);unique_index" json:"uuid"`
 
 	CreatedAt		time.Time	`gorm:"name:created_at;type:datetime;autoCreateTime:milli" json:"createdAt"`
-	CreatedBy		*uint		`gorm:"name:created_by;index"`
+	CreatedBy		*uint		`gorm:"name:created_by;index" json:"-"`
 	CreatedByUser	*User		`gorm:"foreignKey:CreatedBy" json:"createdBy,omitempty"`
 
 	UpdatedAt		time.Time	`gorm:"name:updated_at;type:datetime;autoUpdateTime:milli" json:"updatedAt"`
-	UpdatedBy		*uint		`gorm:"name:updated_by;index"`
+	UpdatedBy		*uint		`gorm:"name:updated_by;index" json:"-"`
 	UpdatedByUser	*User		`gorm:"foreignKey:UpdatedBy" json:"updatedBy,omitempty"`
 
 	DeletedAt		*time.Time	`gorm:"name:deleted_at;type:datetime" json:"deletedAt"`
-	DeletedBy		*uint		`gorm:"name:deleted_by"`
+	DeletedBy		*uint		`gorm:"name:deleted_by" json:"-"`
 	DeletedByUser	*User		`gorm:"foreignKey:DeletedBy" json:"deletedBy,omitempty"`
 
-	Version			int32		`gorm:"name:version;" json:"version"`
+	Version			int32		`gorm:"name:version;default:1" json:"version"`
 }
 
 func (base BaseModel) GetId() uint {
@@ -57,17 +56,12 @@ func (base *BaseModel) AssignUuid() {
 }
 
 func (base *BaseModel) BeforeCreate(db *gorm.DB) (err error) {
-	log.Println("in identity before create")
-
 	base.AssignUuid()
 	actionUser := GetActionUser(db)
-	log.Println(actionUser)
-	if actionUser == nil {
+	if actionUser.IsZero() {
 		return nil
 	}
-	base.CreatedByUser = actionUser
 	base.CreatedBy = &actionUser.ID
-	base.UpdatedByUser = actionUser
 	base.UpdatedBy = &actionUser.ID
 
 	return nil
@@ -79,10 +73,10 @@ func (base BaseModel) GetCreatedAt() time.Time {
 
 func (base *BaseModel) BeforeSave(db *gorm.DB) error {
 	actionUser := GetActionUser(db)
-	if actionUser == nil {
+	if actionUser.IsZero() {
 		return nil
 	}
-	base.UpdatedByUser = actionUser
+	base.UpdatedBy = &actionUser.ID
 
 	return nil
 }
@@ -100,10 +94,10 @@ type RequestedMetaInfo struct {
 	RequestedAt time.Time `gorm:"name:requested_at;type:datetime" json:"requestedAt,omitempty"`
 }
 
-func GetActionUser(db *gorm.DB) *User {
-	var actionUser *User
+func GetActionUser(db *gorm.DB) User {
+	var actionUser User
 	if user, ok := db.Get("actionUser"); ok {
-		actionUser = user.(*User)
+		actionUser = user.(User)
 	}
 
 	return actionUser

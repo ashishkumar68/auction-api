@@ -52,3 +52,10 @@ func (repo *ItemRepository) FindByUuid(uuid string) *models.Item {
 
 	return &item
 }
+
+func (repo *ItemRepository) FindByName(name string) []models.Item {
+	var items []models.Item
+	repo.connection.Where("name LIKE ?", "%" + name + "%").Find(&items)
+
+	return items
+}

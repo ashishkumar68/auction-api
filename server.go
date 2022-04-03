@@ -13,9 +13,7 @@ import (
 
 func SetupRoutes(engine *gin.Engine) {
 	apiGroup := engine.Group(
-		"/api",
-		middleware.AssignNewDatabaseConnection(),
-		middleware.AuthenticatedRoute(),
+		"/api", middleware.AuthenticatedRoute(),
 	)
 	routes.MapIndexRoutes(engine)
 	routes.MapAuthRoutes(apiGroup)

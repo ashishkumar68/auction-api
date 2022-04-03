@@ -17,7 +17,7 @@ func InitUserRepository(conn *gorm.DB) *UserRepository {
 	}
 }
 
-func (repo *UserRepository) Find(id int32) *models.User {
+func (repo *UserRepository) Find(id uint) *models.User {
 	var user models.User
 	repo.connection.Find(&user, id)
 
