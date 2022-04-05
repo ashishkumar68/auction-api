@@ -6,24 +6,33 @@ import (
 	"time"
 )
 
+type IdentityAuditableModel struct {
+	BaseModel
+	AuditModel
+}
+
 type BaseModel struct {
-	ID		uint	`gorm:"name:id;primarykey;AUTO_INCREMENT" json:"id"`
+	ID		uint	`gorm:"name:id;primaryKey;AUTO_INCREMENT" json:"id"`
 	Uuid	string	`gorm:"name:uuid;type:varchar(36);unique_index" json:"uuid"`
 
 	CreatedAt		time.Time	`gorm:"name:created_at;type:datetime;autoCreateTime:milli" json:"createdAt"`
-	CreatedBy		*uint		`gorm:"name:created_by;index" json:"-"`
-	CreatedByUser	*User		`gorm:"foreignKey:CreatedBy" json:"createdBy,omitempty"`
-
 	UpdatedAt		time.Time	`gorm:"name:updated_at;type:datetime;autoUpdateTime:milli" json:"updatedAt"`
-	UpdatedBy		*uint		`gorm:"name:updated_by;index" json:"-"`
-	UpdatedByUser	*User		`gorm:"foreignKey:UpdatedBy" json:"updatedBy,omitempty"`
-
 	DeletedAt		*time.Time	`gorm:"name:deleted_at;type:datetime" json:"deletedAt"`
-	DeletedBy		*uint		`gorm:"name:deleted_by" json:"-"`
-	DeletedByUser	*User		`gorm:"foreignKey:DeletedBy" json:"deletedBy,omitempty"`
 
 	Version			int32		`gorm:"name:version;default:1" json:"version"`
 }
+
+type AuditModel struct {
+	UserCreatedBy	*uint		`gorm:"column:created_by;index" json:"-"`
+	UserCreated		*User		`gorm:"foreignKey:UserCreatedBy" json:"createdBy,omitempty"`
+
+	UserUpdatedBy	*uint		`gorm:"column:updated_by;index" json:"-"`
+	UserUpdated		*User		`gorm:"foreignKey:UserUpdatedBy" json:"updatedBy,omitempty"`
+
+	UserDeletedBy	*uint		`gorm:"column:deleted_by;index" json:"-"`
+	UserDeleted		*User		`gorm:"foreignKey:UserDeletedBy" json:"deletedBy,omitempty"`
+}
+
 
 func (base BaseModel) GetId() uint {
 	return base.ID
@@ -55,14 +64,14 @@ func (base *BaseModel) AssignUuid() {
 	}
 }
 
-func (base *BaseModel) BeforeCreate(db *gorm.DB) (err error) {
+func (base *IdentityAuditableModel) BeforeCreate(db *gorm.DB) (err error) {
 	base.AssignUuid()
 	actionUser := GetActionUser(db)
 	if actionUser.IsZero() {
 		return nil
 	}
-	base.CreatedBy = &actionUser.ID
-	base.UpdatedBy = &actionUser.ID
+	base.UserCreatedBy = &actionUser.ID
+	base.UserUpdatedBy = &actionUser.ID
 
 	return nil
 }
@@ -71,12 +80,12 @@ func (base BaseModel) GetCreatedAt() time.Time {
 	return base.CreatedAt
 }
 
-func (base *BaseModel) BeforeSave(db *gorm.DB) error {
+func (base *IdentityAuditableModel) BeforeSave(db *gorm.DB) error {
 	actionUser := GetActionUser(db)
 	if actionUser.IsZero() {
 		return nil
 	}
-	base.UpdatedBy = &actionUser.ID
+	base.UserUpdatedBy = &actionUser.ID
 
 	return nil
 }

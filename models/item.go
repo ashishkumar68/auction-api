@@ -11,7 +11,7 @@ type Value float32
 type ItemCategory uint8
 
 type Item struct {
-	BaseModel
+	IdentityAuditableModel
 
 	Name		string			`gorm:"type:varchar(512)" json:"name"`
 	Description	string			`gorm:"type:varchar(1024)" json:"description"`

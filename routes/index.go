@@ -11,7 +11,8 @@ func MapIndexRoutes(engine *gin.Engine) {
 
 var (
 	AnonymousRoutes = gin.H{
-		"/api/login": true,
-		"/api/register": true,
+		"/api/login":		[]string{"POST"},
+		"/api/register":	[]string{"POST"},
+		"/api/items":		[]string{"GET"},
 	}
 )

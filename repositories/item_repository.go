@@ -48,7 +48,7 @@ func (repo *ItemRepository) Update(item *models.Item) error {
 
 func (repo *ItemRepository) FindByUuid(uuid string) *models.Item {
 	var item models.Item
-	repo.connection.Where("uuid = ?", uuid).First(&item)
+	repo.connection.Preload("UserCreated").Where("uuid = ?", uuid).First(&item)
 
 	return &item
 }
@@ -58,4 +58,11 @@ func (repo *ItemRepository) FindByName(name string) []models.Item {
 	repo.connection.Where("name LIKE ?", "%" + name + "%").Find(&items)
 
 	return items
+}
+
+func (repo *ItemRepository) List() *gorm.DB {
+	return repo.connection.
+		Joins("UserCreated").
+		Joins("UserUpdated").
+		Model(&models.Item{})
 }

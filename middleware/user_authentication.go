@@ -14,9 +14,23 @@ import (
 )
 
 func AuthenticatedRoute() gin.HandlerFunc {
+	isAnonymousRoute := func(c *gin.Context) bool {
+		isAnonymous := false
+		if allowedMethods, ok := routes.AnonymousRoutes[c.Request.URL.Path]; ok {
+			for _, method := range allowedMethods.([]string) {
+				if method == c.Request.Method {
+					isAnonymous = true
+					break
+				}
+			}
+		}
+
+		return isAnonymous
+	}
+
 	return func (c *gin.Context) {
 		dbConnection := database.NewConnectionWithContext(c)
-		if _, ok := routes.AnonymousRoutes[c.Request.RequestURI]; ok {
+		if isAnonymousRoute(c) {
 			c.Set("db", dbConnection)
 			c.Next()
 			return

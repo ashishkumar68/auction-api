@@ -7,4 +7,5 @@ import (
 
 func MapItemRoutes(itemsGroup *gin.RouterGroup) {
 	itemsGroup.POST("/items", item.CreateItem)
+	itemsGroup.GET("/items", item.ListItems)
 }

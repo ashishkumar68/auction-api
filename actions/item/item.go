@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"github.com/ashishkumar68/auction-api/actions"
 	"github.com/ashishkumar68/auction-api/commands"
+	"github.com/ashishkumar68/auction-api/models"
+	"github.com/ashishkumar68/auction-api/repositories"
 	"github.com/gin-gonic/gin"
+	"github.com/morkid/paginate"
 	"log"
 	"net/http"
 )
@@ -26,4 +29,13 @@ func CreateItem(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, item)
+}
+
+func ListItems(c *gin.Context) {
+	pg := paginate.New()
+	db := actions.GetDBConnectionByContext(c)
+	itemRepo := repositories.NewItemRepository(db)
+
+	c.JSON(http.StatusOK, pg.With(itemRepo.List()).Request(c.Request).Response(&[]models.Item{}))
+	return
 }
