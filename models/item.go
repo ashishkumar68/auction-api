@@ -1,10 +1,19 @@
 package models
 
+import (
+	"fmt"
+	"gorm.io/gorm"
+)
+
 const (
 	CategoryElectronicsInt = iota
 	CategoryAppliancesInt
 	CategoryHomeInt
 	CategoryArtInt
+)
+
+var (
+	EmptyItemBidUserError = fmt.Errorf("placing item bid requires a user but was found empty")
 )
 
 type Value float32
@@ -60,4 +69,12 @@ func NewBidFromValues(
 		ItemId: &item.ID,
 		Value:  value,
 	}
+}
+
+func (bid *Bid) AfterCreate(db *gorm.DB) error {
+	if bid.UserCreatedBy == nil {
+		return EmptyItemBidUserError
+	}
+
+	return nil
 }

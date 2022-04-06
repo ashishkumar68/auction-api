@@ -19,3 +19,9 @@ func NewItemRepository(conn *gorm.DB) *ItemRepository {
 
 	return nil
 }
+
+func NewBidRepository(conn *gorm.DB) *BidRepository {
+	wire.Build(InitBidRepository)
+
+	return nil
+}

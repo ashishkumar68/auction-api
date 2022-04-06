@@ -21,3 +21,8 @@ func NewItemRepository(conn *gorm.DB) *ItemRepository {
 	itemRepository := InitItemRepository(conn)
 	return itemRepository
 }
+
+func NewBidRepository(conn *gorm.DB) *BidRepository {
+	bidRepository := InitBidRepository(conn)
+	return bidRepository
+}

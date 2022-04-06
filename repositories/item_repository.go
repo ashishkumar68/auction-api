@@ -17,7 +17,7 @@ func InitItemRepository(conn *gorm.DB) *ItemRepository {
 	}
 }
 
-func (repo *ItemRepository) Find(id int32) *models.Item {
+func (repo *ItemRepository) Find(id uint) *models.Item {
 	var item models.Item
 	repo.connection.Find(&item, id)
 
