@@ -3,14 +3,14 @@ package config
 import "sync"
 
 const (
-	AppEnvProd = "prod"
+	AppEnvProd    = "prod"
 	AppEnvStaging = "staging"
-	AppEnvTest = "test"
+	AppEnvTest    = "test"
 )
 
 var once sync.Once
 
-func InitialiseConfig()  {
+func InitialiseConfig() {
 	once.Do(func() {
 		LoadDBConfig()
 	})

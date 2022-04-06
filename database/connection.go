@@ -18,4 +18,3 @@ func NewConnectionWithContext(ctx context.Context) *gorm.DB {
 
 	return db
 }
-

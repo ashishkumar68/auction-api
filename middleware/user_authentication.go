@@ -28,7 +28,7 @@ func AuthenticatedRoute() gin.HandlerFunc {
 		return isAnonymous
 	}
 
-	return func (c *gin.Context) {
+	return func(c *gin.Context) {
 		dbConnection := database.NewConnectionWithContext(c)
 		if isAnonymousRoute(c) {
 			c.Set("db", dbConnection)

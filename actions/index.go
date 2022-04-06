@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	InternalServerErrMsg	= "Something went wrong, sorry please try again later."
-	AccountWithEmailExists	= "Sorry! a user with this email already exists"
-	InvalidCredentials		= "Invalid credentials were found."
+	InternalServerErrMsg   = "Something went wrong, sorry please try again later."
+	AccountWithEmailExists = "Sorry! a user with this email already exists"
+	InvalidCredentials     = "Invalid credentials were found."
 )
 
 func IndexAction(c *gin.Context) {

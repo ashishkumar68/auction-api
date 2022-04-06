@@ -13,18 +13,18 @@ import (
 )
 
 const (
-	HashCost = 10
+	HashCost         = 10
 	TokenTypeAccess  = "ACCESS_TOKEN"
 	TokenTypeRefresh = "REFRESH_TOKEN"
 )
 
 var (
 	tokenTypeExpiryMap = gin.H{
-		TokenTypeAccess:	time.Minute * 60, // 60 minutes
-		TokenTypeRefresh:	time.Hour * 24 * 60, // 60 days
+		TokenTypeAccess:  time.Minute * 60,    // 60 minutes
+		TokenTypeRefresh: time.Hour * 24 * 60, // 60 days
 	}
-	UserEmailDoesntExist	= errors.New("user account with this email doesn't exist")
-	PasswordsDontMatch		= errors.New("provided password doesn't match with actual password")
+	UserEmailDoesntExist = errors.New("user account with this email doesn't exist")
+	PasswordsDontMatch   = errors.New("provided password doesn't match with actual password")
 )
 
 type HasLoginIdentity interface {

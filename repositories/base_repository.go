@@ -7,4 +7,3 @@ import (
 type BaseRepository struct {
 	connection *gorm.DB
 }
-

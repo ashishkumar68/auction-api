@@ -20,7 +20,6 @@ import (
 	"time"
 )
 
-
 var _ = Describe("Item Tests", func() {
 	protocol := "http"
 	host := os.Getenv("HOST")
@@ -87,7 +86,7 @@ VALUES (1, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a
 				"POST",
 				map[string]string{},
 				map[string]string{"Authorization": token},
-				time.Second * 10,
+				time.Second*10,
 				[]byte(payload),
 			)
 			defer resp.Body.Close()
@@ -129,7 +128,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 				"GET",
 				map[string]string{},
 				map[string]string{},
-				time.Second * 10,
+				time.Second*10,
 				nil,
 			)
 			defer resp.Body.Close()
@@ -159,7 +158,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 				"GET",
 				map[string]string{},
 				map[string]string{"Authorization": token},
-				time.Second * 10,
+				time.Second*10,
 				nil,
 			)
 			defer resp.Body.Close()

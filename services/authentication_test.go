@@ -26,13 +26,13 @@ var _ = Describe("Authentication service tests", func() {
 		It("Should generate new JWT token for user which can be verified successfully.", func() {
 			user := models.User{
 				BaseModel: models.BaseModel{
-					ID: 1,
+					ID:   1,
 					Uuid: uuid.NewString(),
 				},
 				FirstName: "John",
-				LastName: "Smith",
-				Email: "johnsmith@abc.com",
-				IsActive: true,
+				LastName:  "Smith",
+				Email:     "johnsmith@abc.com",
+				IsActive:  true,
 			}
 			tokenString, err := GenerateNewJwtToken(user, TokenTypeAccess)
 			Expect(err).To(BeNil())

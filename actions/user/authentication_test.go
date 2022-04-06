@@ -19,10 +19,10 @@ import (
 type RegisterResponseBody struct {
 	models.BaseModel
 
-	FirstName	string	`json:"firstName"`
-	LastName	string	`json:"lastName"`
-	Email		string	`json:"email"`
-	IsActive	bool	`json:"isActive"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	IsActive  bool   `json:"isActive"`
 }
 
 type LoginResponseBody struct {

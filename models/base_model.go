@@ -12,27 +12,26 @@ type IdentityAuditableModel struct {
 }
 
 type BaseModel struct {
-	ID		uint	`gorm:"name:id;primaryKey;AUTO_INCREMENT" json:"id"`
-	Uuid	string	`gorm:"name:uuid;type:varchar(36);unique_index" json:"uuid"`
+	ID   uint   `gorm:"name:id;primaryKey;AUTO_INCREMENT" json:"id"`
+	Uuid string `gorm:"name:uuid;type:varchar(36);unique_index" json:"uuid"`
 
-	CreatedAt		time.Time	`gorm:"name:created_at;type:datetime;autoCreateTime:milli" json:"createdAt"`
-	UpdatedAt		time.Time	`gorm:"name:updated_at;type:datetime;autoUpdateTime:milli" json:"updatedAt"`
-	DeletedAt		*time.Time	`gorm:"name:deleted_at;type:datetime" json:"deletedAt"`
+	CreatedAt time.Time  `gorm:"name:created_at;type:datetime;autoCreateTime:milli" json:"createdAt"`
+	UpdatedAt time.Time  `gorm:"name:updated_at;type:datetime;autoUpdateTime:milli" json:"updatedAt"`
+	DeletedAt *time.Time `gorm:"name:deleted_at;type:datetime" json:"deletedAt"`
 
-	Version			int32		`gorm:"name:version;default:1" json:"version"`
+	Version int32 `gorm:"name:version;default:1" json:"version"`
 }
 
 type AuditModel struct {
-	UserCreatedBy	*uint		`gorm:"column:created_by;index" json:"-"`
-	UserCreated		*User		`gorm:"foreignKey:UserCreatedBy" json:"createdBy,omitempty"`
+	UserCreatedBy *uint `gorm:"column:created_by;index" json:"-"`
+	UserCreated   *User `gorm:"foreignKey:UserCreatedBy" json:"createdBy,omitempty"`
 
-	UserUpdatedBy	*uint		`gorm:"column:updated_by;index" json:"-"`
-	UserUpdated		*User		`gorm:"foreignKey:UserUpdatedBy" json:"updatedBy,omitempty"`
+	UserUpdatedBy *uint `gorm:"column:updated_by;index" json:"-"`
+	UserUpdated   *User `gorm:"foreignKey:UserUpdatedBy" json:"updatedBy,omitempty"`
 
-	UserDeletedBy	*uint		`gorm:"column:deleted_by;index" json:"-"`
-	UserDeleted		*User		`gorm:"foreignKey:UserDeletedBy" json:"deletedBy,omitempty"`
+	UserDeletedBy *uint `gorm:"column:deleted_by;index" json:"-"`
+	UserDeleted   *User `gorm:"foreignKey:UserDeletedBy" json:"deletedBy,omitempty"`
 }
-
 
 func (base BaseModel) GetId() uint {
 	return base.ID
@@ -95,8 +94,8 @@ func (base BaseModel) IsDeleted() bool {
 }
 
 type ActionedMetaInfo struct {
-	ActionedAt	time.Time	`gorm:"name:actioned_at;type:datetime" json:"actionedAt,omitempty"`
-	CycledAt	time.Time	`gorm:"name:cycled_at;type:datetime" json:"cycledAt,omitempty"`
+	ActionedAt time.Time `gorm:"name:actioned_at;type:datetime" json:"actionedAt,omitempty"`
+	CycledAt   time.Time `gorm:"name:cycled_at;type:datetime" json:"cycledAt,omitempty"`
 }
 
 type RequestedMetaInfo struct {
