@@ -18,6 +18,8 @@ type Item struct {
 	Category    ItemCategory `gorm:"type:smallint" json:"category"`
 	BrandName   string       `gorm:"type:varchar(1024)" json:"brandName"`
 	MarketValue Value        `gorm:"type:float(16,4)" json:"marketValue"`
+
+	Bids []Bid
 }
 
 func NewItemFromValues(
@@ -25,7 +27,8 @@ func NewItemFromValues(
 	description string,
 	category ItemCategory,
 	brandName string,
-	value Value) *Item {
+	value Value,
+) *Item {
 
 	return &Item{
 		Name:        name,
@@ -38,4 +41,23 @@ func NewItemFromValues(
 
 func GetAvailableItemCategories() []int {
 	return []int{CategoryElectronicsInt, CategoryAppliancesInt, CategoryHomeInt, CategoryArtInt}
+}
+
+type Bid struct {
+	IdentityAuditableModel
+
+	ItemId *uint `gorm:"column:item_id;index" json:"-"`
+	Item   *Item `gorm:"foreignKey:ItemId" json:"item"`
+	Value  Value `gorm:"type:float(16,4)" json:"bidValue"`
+}
+
+func NewBidFromValues(
+	item *Item,
+	value Value,
+) *Bid {
+
+	return &Bid{
+		ItemId: &item.ID,
+		Value:  value,
+	}
 }
