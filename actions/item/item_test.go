@@ -10,6 +10,7 @@ import (
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/repositories"
 	"github.com/ashishkumar68/auction-api/services"
+	"github.com/morkid/paginate"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gorm.io/gorm"
@@ -25,7 +26,7 @@ var _ = Describe("Item Tests", func() {
 	host := os.Getenv("HOST")
 	port := os.Getenv("PORT")
 	prefix := "/api"
-	createItemRoute := fmt.Sprintf("%s://%s:%s%s/items", protocol, host, port, prefix)
+	itemsRoute := fmt.Sprintf("%s://%s:%s%s/items", protocol, host, port, prefix)
 
 	contentTypeJson := "application/json"
 	var dbConnection *gorm.DB
@@ -42,8 +43,8 @@ var _ = Describe("Item Tests", func() {
 		dbConnection.Exec(`SET foreign_key_checks = 1;`)
 
 		dbConnection.Exec(`
-INSERT INTO users(uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
-VALUES ("40449c42-1a4d-4dad-b942-48ded845329e", NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
+INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
+VALUES (1, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
 `)
 		user = userRepository.FindByEmail("johnsmith24@abc.com")
 
@@ -70,7 +71,7 @@ VALUES ("40449c42-1a4d-4dad-b942-48ded845329e", NOW(), NOW(), "John", "Smith", "
 `
 
 		It("should not allow new item as anonymous user in system.", func() {
-			resp, err := http.Post(createItemRoute, contentTypeJson, bytes.NewReader([]byte(payload)))
+			resp, err := http.Post(itemsRoute, contentTypeJson, bytes.NewReader([]byte(payload)))
 			Expect(err).To(BeNil(), "Could not detect service available.")
 			Expect(resp).To(Not(BeNil()), "Could not detect service available.")
 			resp.Body.Close()
@@ -82,7 +83,7 @@ VALUES ("40449c42-1a4d-4dad-b942-48ded845329e", NOW(), NOW(), "John", "Smith", "
 			token, err := services.GenerateNewJwtToken(user, services.TokenTypeAccess)
 			Expect(err).To(BeNil(), "Could not generate new token for create item test.")
 			resp, err := client.MakeRequest(
-				createItemRoute,
+				itemsRoute,
 				"POST",
 				map[string]string{},
 				map[string]string{"Authorization": token},
@@ -108,6 +109,76 @@ VALUES ("40449c42-1a4d-4dad-b942-48ded845329e", NOW(), NOW(), "John", "Smith", "
 			//createdBy := userRepository.Find(*actualItem.User)
 			Expect(actualItem.UserCreated).ToNot(BeNil())
 			Expect(actualItem.UserCreated.Email).To(Equal("johnsmith24@abc.com"))
+		})
+	})
+
+	Context("I should be able to list the items anonymously as well as logged in user.", func() {
+		BeforeEach(func() {
+			dbConnection.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value) VALUES 
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,1,1,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000'),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,1,1,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000');
+`)
+			items := itemRepository.FindByName("ABC Item")
+			Expect(len(items)).To(Equal(2))
+		})
+
+		It("should allow listing items anonymously.", func() {
+			resp, err := client.MakeRequest(
+				itemsRoute,
+				"GET",
+				map[string]string{},
+				map[string]string{},
+				time.Second * 10,
+				nil,
+			)
+			defer resp.Body.Close()
+			Expect(err).To(BeNil(), "Could not detect service available.")
+			Expect(resp).To(Not(BeNil()), "Could not detect service available.")
+			var page paginate.Page
+			responseBytes, err := io.ReadAll(resp.Body)
+			Expect(err).To(BeNil(), "Could not read from response message body.")
+			err = json.Unmarshal(responseBytes, &page)
+			Expect(err).To(BeNil(), "Could not parse items list from response message.")
+			pageItems, err := json.Marshal(page.Items)
+			Expect(err).To(BeNil(), "Could not serialize payload to bytes.")
+			var items []models.Item
+			err = json.Unmarshal(pageItems, &items)
+			Expect(err).To(BeNil(), "Could not deserialize items.")
+
+			Expect(len(items)).To(Equal(2))
+			Expect(items[0].Name).To(ContainSubstring("ABC Item"))
+			Expect(items[1].Name).To(ContainSubstring("ABC Item"))
+		})
+
+		It("should allow listing items with authenticated user.", func() {
+			token, err := services.GenerateNewJwtToken(user, services.TokenTypeAccess)
+			Expect(err).To(BeNil(), "Could not generate new token for create item test.")
+			resp, err := client.MakeRequest(
+				itemsRoute,
+				"GET",
+				map[string]string{},
+				map[string]string{"Authorization": token},
+				time.Second * 10,
+				nil,
+			)
+			defer resp.Body.Close()
+			Expect(err).To(BeNil(), "Could not detect service available.")
+			Expect(resp).To(Not(BeNil()), "Could not detect service available.")
+			var page paginate.Page
+			responseBytes, err := io.ReadAll(resp.Body)
+			Expect(err).To(BeNil(), "Could not read from response message body.")
+			err = json.Unmarshal(responseBytes, &page)
+			Expect(err).To(BeNil(), "Could not parse items list from response message.")
+			pageItems, err := json.Marshal(page.Items)
+			Expect(err).To(BeNil(), "Could not serialize payload to bytes.")
+			var items []models.Item
+			err = json.Unmarshal(pageItems, &items)
+			Expect(err).To(BeNil(), "Could not deserialize items.")
+
+			Expect(len(items)).To(Equal(2))
+			Expect(items[0].Name).To(ContainSubstring("ABC Item"))
+			Expect(items[1].Name).To(ContainSubstring("ABC Item"))
 		})
 	})
 })
