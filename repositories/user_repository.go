@@ -11,7 +11,7 @@ type UserRepository struct {
 	BaseRepository
 }
 
-func InitUserRepository(conn *gorm.DB) *UserRepository {
+func initUserRepository(conn *gorm.DB) *UserRepository {
 	return &UserRepository{
 		BaseRepository: BaseRepository{connection: conn},
 	}

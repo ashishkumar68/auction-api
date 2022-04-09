@@ -55,7 +55,7 @@ func GetAvailableItemCategories() []int {
 type Bid struct {
 	IdentityAuditableModel
 
-	ItemId *uint `gorm:"column:item_id;index" json:"-"`
+	ItemId uint `gorm:"column:item_id;index" json:"-"`
 	Item   *Item `gorm:"foreignKey:ItemId" json:"item"`
 	Value  Value `gorm:"type:float(16,4)" json:"bidValue"`
 }
@@ -63,12 +63,19 @@ type Bid struct {
 func NewBidFromValues(
 	item *Item,
 	value Value,
+	bidBy *User,
 ) *Bid {
 
-	return &Bid{
-		ItemId: &item.ID,
+	newBid := &Bid{
+		ItemId: item.ID,
+		Item: nil,
 		Value:  value,
 	}
+	if bidBy != nil {
+		newBid.UserCreatedBy = &bidBy.ID
+	}
+
+	return newBid
 }
 
 func (bid *Bid) AfterCreate(db *gorm.DB) error {

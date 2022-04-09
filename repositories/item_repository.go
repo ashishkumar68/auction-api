@@ -11,7 +11,7 @@ type ItemRepository struct {
 	BaseRepository
 }
 
-func InitItemRepository(conn *gorm.DB) *ItemRepository {
+func initItemRepository(conn *gorm.DB) *ItemRepository {
 	return &ItemRepository{
 		BaseRepository: BaseRepository{connection: conn},
 	}

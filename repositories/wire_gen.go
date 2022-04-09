@@ -13,16 +13,16 @@ import (
 // Injectors from di_container.go:
 
 func NewUserRepository(conn *gorm.DB) *UserRepository {
-	userRepository := InitUserRepository(conn)
+	userRepository := initUserRepository(conn)
 	return userRepository
 }
 
 func NewItemRepository(conn *gorm.DB) *ItemRepository {
-	itemRepository := InitItemRepository(conn)
+	itemRepository := initItemRepository(conn)
 	return itemRepository
 }
 
 func NewBidRepository(conn *gorm.DB) *BidRepository {
-	bidRepository := InitBidRepository(conn)
+	bidRepository := initBidRepository(conn)
 	return bidRepository
 }

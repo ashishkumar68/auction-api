@@ -28,9 +28,9 @@ func NewUserFromValues(
 	firstName string,
 	lastName string,
 	email string,
-	plainPass string) User {
+	plainPass string) *User {
 
-	return User{
+	return &User{
 		FirstName:     firstName,
 		LastName:      lastName,
 		Email:         email,

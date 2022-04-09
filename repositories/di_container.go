@@ -9,19 +9,19 @@ import (
 )
 
 func NewUserRepository(conn *gorm.DB) *UserRepository {
-	wire.Build(InitUserRepository)
+	wire.Build(initUserRepository)
 
 	return nil
 }
 
 func NewItemRepository(conn *gorm.DB) *ItemRepository {
-	wire.Build(InitItemRepository)
+	wire.Build(initItemRepository)
 
 	return nil
 }
 
 func NewBidRepository(conn *gorm.DB) *BidRepository {
-	wire.Build(InitBidRepository)
+	wire.Build(initBidRepository)
 
 	return nil
 }

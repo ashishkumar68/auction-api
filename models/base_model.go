@@ -69,8 +69,12 @@ func (base *IdentityAuditableModel) BeforeCreate(db *gorm.DB) (err error) {
 	if actionUser.IsZero() {
 		return nil
 	}
-	base.UserCreatedBy = &actionUser.ID
-	base.UserUpdatedBy = &actionUser.ID
+	if base.UserCreatedBy == nil {
+		base.UserCreatedBy = &actionUser.ID
+	}
+	if base.UserUpdatedBy == nil {
+		base.UserUpdatedBy = &actionUser.ID
+	}
 
 	return nil
 }
@@ -84,7 +88,9 @@ func (base *IdentityAuditableModel) BeforeSave(db *gorm.DB) error {
 	if actionUser.IsZero() {
 		return nil
 	}
-	base.UserUpdatedBy = &actionUser.ID
+	if base.UserUpdatedBy == nil {
+		base.UserUpdatedBy = &actionUser.ID
+	}
 
 	return nil
 }

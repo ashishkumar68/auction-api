@@ -1,7 +1,38 @@
 package item
 
-import "github.com/gin-gonic/gin"
+import (
+	"fmt"
+	"github.com/ashishkumar68/auction-api/actions"
+	"github.com/ashishkumar68/auction-api/forms"
+	"github.com/ashishkumar68/auction-api/services"
+	"github.com/gin-gonic/gin"
+	"log"
+	"net/http"
+	"strconv"
+)
 
 func PlaceBidOnItem(c *gin.Context)	{
-	
+	var placeBidForm forms.PlaceNewItemBidForm
+	itemId, err := strconv.Atoi(c.Param("itemId"))
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not save bid: %s", err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
+		return
+	}
+	placeBidForm.ItemId = uint(itemId)
+	placeBidForm.BidUser = actions.GetActionUserByContext(c)
+	if err = c.ShouldBindJSON(&placeBidForm); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	itemService := services.NewItemService(actions.GetDBConnectionByContext(c))
+
+	bid, err := itemService.PlaceItemBid(c, placeBidForm)
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not save bid: %s", err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": actions.InternalServerErrMsg})
+		return
+	}
+
+	c.JSON(http.StatusCreated, bid)
 }

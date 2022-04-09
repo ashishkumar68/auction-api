@@ -39,6 +39,7 @@ var _ = Describe("Item Tests", func() {
 		dbConnection.Exec(`SET foreign_key_checks = 0;`)
 		dbConnection.Exec(`TRUNCATE TABLE users;`)
 		dbConnection.Exec(`TRUNCATE TABLE items;`)
+		dbConnection.Exec(`TRUNCATE TABLE bids;`)
 		dbConnection.Exec(`SET foreign_key_checks = 1;`)
 
 		dbConnection.Exec(`

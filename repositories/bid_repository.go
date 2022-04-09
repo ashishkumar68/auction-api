@@ -11,7 +11,7 @@ type BidRepository struct {
 	BaseRepository
 }
 
-func InitBidRepository(conn *gorm.DB) *BidRepository {
+func initBidRepository(conn *gorm.DB) *BidRepository {
 	return &BidRepository{
 		BaseRepository: BaseRepository{connection: conn},
 	}
@@ -25,6 +25,7 @@ func (repo *BidRepository) Find(id uint) *models.Bid {
 }
 
 func (repo *BidRepository) Save(bid *models.Bid) error {
+	log.Println("received bid while saving", *bid)
 	result := repo.connection.Create(bid)
 	if result.Error != nil {
 		log.Println(fmt.Sprintf("Could not insert new record for type: %T", bid))
@@ -55,11 +56,14 @@ func (repo *BidRepository) FindByUuid(uuid string) *models.Bid {
 
 func (repo *BidRepository) FindByItem(item *models.Item, user *models.User) *models.Bid {
 	var bid models.Bid
+
 	repo.connection.
-		Joins("Item").
-		Joins("UserCreated").
-		Where("UserCreated.ID = ? AND Item.ID = ?", user.ID, item.ID).
-		First(&bid)
+		Table("bids").
+		Select("bids.*").
+		Joins("JOIN items ON bids.item_id = items.id").
+		Joins("JOIN users ON bids.created_by = users.id").
+		Where("users.id = ? AND items.id = ?", user.ID, item.ID).
+		Find(&bid)
 
 	return &bid
 }

@@ -3,9 +3,10 @@ package item
 import (
 	"fmt"
 	"github.com/ashishkumar68/auction-api/actions"
-	"github.com/ashishkumar68/auction-api/commands"
+	"github.com/ashishkumar68/auction-api/forms"
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/repositories"
+	"github.com/ashishkumar68/auction-api/services"
 	"github.com/gin-gonic/gin"
 	"github.com/morkid/paginate"
 	"log"
@@ -13,15 +14,13 @@ import (
 )
 
 func CreateItem(c *gin.Context) {
-	var addItemCommand commands.AddNewItemCommand
-	if err := c.ShouldBindJSON(&addItemCommand); err != nil {
+	var addItemForm forms.AddNewItemForm
+	if err := c.ShouldBindJSON(&addItemForm); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	addItemCommand.DB = actions.GetDBConnectionByContext(c)
-
-	bus := commands.NewCommandBus()
-	item, err := bus.ExecuteContext(c, &addItemCommand)
+	itemService := services.NewItemService(actions.GetDBConnectionByContext(c))
+	item, err := itemService.AddNew(c, addItemForm)
 	if err != nil {
 		log.Println(fmt.Sprintf("Could not save item: %s", err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": actions.InternalServerErrMsg})
