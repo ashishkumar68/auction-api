@@ -25,8 +25,6 @@ ENV GOSRC=${GOPATH}/src
 ENV PROJECTDIR=${GOSRC}/auction-api
 # add go bin to path, this is required to run go binaries.
 ENV PATH=$PATH:${GOBIN}
-ENV CGO_ENABLED 0
-ENV DELVE_PORT 2345
 ENV AIR_FILE_NAME ${AIR_FILE_NAME}
 
 RUN mkdir -p ${GOPATH}/bin/
@@ -37,7 +35,7 @@ RUN go install github.com/google/wire/cmd/wire@latest
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 RUN curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s
 
-EXPOSE 8081 ${DELVE_PORT}
+EXPOSE 8081
 
 COPY init/docker-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

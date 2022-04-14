@@ -30,7 +30,9 @@ func (service *ItemServiceImplementor) AddNew(_ context.Context, form forms.AddN
 		form.Description,
 		form.Category,
 		form.BrandName,
-		form.MarketValue)
+		form.MarketValue,
+		form.LastBidDate,
+	)
 	newItem.UserCreatedBy = form.ActionUser.ID
 	newItem.UserUpdatedBy = form.ActionUser.ID
 	err := service.repository.SaveItem(newItem)

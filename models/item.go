@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"gorm.io/gorm"
+	"time"
 )
 
 const (
@@ -27,6 +28,7 @@ type Item struct {
 	Category    ItemCategory `gorm:"type:smallint" json:"category"`
 	BrandName   string       `gorm:"type:varchar(1024)" json:"brandName"`
 	MarketValue Value        `gorm:"type:float(16,4)" json:"marketValue"`
+	LastBidDate time.Time    `gorm:"name:last_bid_date;type:date;not null" json:"lastBidDate"`
 
 	Bids []Bid
 }
@@ -41,6 +43,7 @@ func NewItemFromValues(
 	category ItemCategory,
 	brandName string,
 	value Value,
+	lastBidDate time.Time,
 ) *Item {
 
 	return &Item{
@@ -49,6 +52,7 @@ func NewItemFromValues(
 		Category:    category,
 		BrandName:   brandName,
 		MarketValue: value,
+		LastBidDate: lastBidDate,
 	}
 }
 

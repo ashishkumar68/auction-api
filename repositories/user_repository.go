@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ashishkumar68/auction-api/models"
 	"log"
+	"strings"
 )
 
 func (repo *Repository) FindUserById(id uint) *models.User {
@@ -17,11 +18,24 @@ func (repo *Repository) FindUserById(id uint) *models.User {
 }
 
 func (repo *Repository) SaveUser(user *models.User) error {
+
 	result := repo.connection.Create(user)
 	if result.Error != nil {
 		log.Println(fmt.Sprintf("Could not insert new record for type: %T", user))
 		log.Println(fmt.Sprintf("Insert error: %s", result.Error))
-		return result.Error
+		if !strings.Contains(result.Error.Error(), "Deadlock") {
+			return result.Error
+		}
+		// try 4 more times when facing deadlock.
+		for retry := 1; retry <= 4; retry++ {
+			result = repo.connection.Create(user)
+			if result.Error != nil && strings.Contains(result.Error.Error(), "Deadlock") {
+				log.Println("retry attempt saving user", retry)
+				continue
+			} else {
+				break
+			}
+		}
 	}
 
 	return nil
