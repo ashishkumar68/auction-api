@@ -1,7 +1,6 @@
 package migrations
 
 import (
-	"context"
 	"fmt"
 	"github.com/ashishkumar68/auction-api/database"
 	"github.com/ashishkumar68/auction-api/models"
@@ -9,7 +8,8 @@ import (
 )
 
 func DropAndCreateTables() {
-	db := database.NewConnectionWithContext(context.TODO())
+	database.InitialiseDatabase()
+	db := database.GetDBHandle()
 
 	db.Exec("SET foreign_key_checks = 0;")
 	db.Exec("DROP FUNCTION IF EXISTS uuid_v4;")

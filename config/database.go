@@ -20,13 +20,11 @@ func LoadDBConfig() {
 		}
 	case AppEnvTest:
 		DBConfig = &gorm.Config{
-			Logger:      logger.Default.LogMode(logger.Info),
-			PrepareStmt: false,
+			Logger: logger.Default.LogMode(logger.Info),
 		}
 	default:
 		DBConfig = &gorm.Config{
-			Logger:      logger.Default.LogMode(logger.Info),
-			PrepareStmt: false,
+			Logger: logger.Default.LogMode(logger.Info),
 		}
 	}
 }

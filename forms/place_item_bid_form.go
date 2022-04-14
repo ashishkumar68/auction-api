@@ -5,8 +5,9 @@ import (
 )
 
 type PlaceNewItemBidForm struct {
+	AuditableForm
 
-	ItemId		uint			`json:"itemId" binding:"required,min=1,max=12"`
-	BidValue	models.Value	`json:"bidValue" binding:"required,min=1"`
-	BidUser		*models.User	`json:"-" binding:"required"`
+	ItemId    uint         `json:"itemId" binding:"required,min=1,max=12"`
+	BidValue  models.Value `json:"bidValue" binding:"required,min=1"`
+	BidUserId uint
 }

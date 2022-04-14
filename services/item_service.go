@@ -12,6 +12,7 @@ import (
 
 var (
 	BidItemNotFoundError = fmt.Errorf("bid item was not found")
+	BidUserNotFoundError = fmt.Errorf("bid user details was not found")
 )
 
 type ItemService interface {
@@ -20,8 +21,7 @@ type ItemService interface {
 }
 
 type ItemServiceImplementor struct {
-	itemRepository *repositories.ItemRepository
-	bidRepository *repositories.BidRepository
+	repository *repositories.Repository
 }
 
 func (service *ItemServiceImplementor) AddNew(_ context.Context, form forms.AddNewItemForm) (*models.Item, error) {
@@ -31,7 +31,9 @@ func (service *ItemServiceImplementor) AddNew(_ context.Context, form forms.AddN
 		form.Category,
 		form.BrandName,
 		form.MarketValue)
-	err := service.itemRepository.Save(newItem)
+	newItem.UserCreatedBy = form.ActionUser.ID
+	newItem.UserUpdatedBy = form.ActionUser.ID
+	err := service.repository.SaveItem(newItem)
 	if err != nil {
 		log.Println(fmt.Sprintf("could not create new item: %s", err))
 		return nil, err
@@ -41,19 +43,23 @@ func (service *ItemServiceImplementor) AddNew(_ context.Context, form forms.AddN
 }
 
 func (service *ItemServiceImplementor) PlaceItemBid(
-	_ context.Context,
+	ctx context.Context,
 	form forms.PlaceNewItemBidForm) (*models.Bid, error) {
 
-	item := service.itemRepository.Find(form.ItemId)
-	if nil == item || item.IsZero() || item.IsDeleted() {
+	bidUser := service.repository.FindUserById(form.BidUserId)
+	if nil == bidUser {
+		return nil, BidUserNotFoundError
+	}
+	item := service.repository.FindItemById(form.ItemId)
+	if nil == item {
 		return nil, BidItemNotFoundError
 	}
-	var placedBid *models.Bid
-	existingBid := service.bidRepository.FindByItem(item, form.BidUser)
 
-	if nil == existingBid || existingBid.IsZero() || existingBid.IsDeleted() {
-		newBid := models.NewBidFromValues(item, form.BidValue, form.BidUser)
-		err := service.bidRepository.Save(newBid)
+	var placedBid *models.Bid
+	existingBid := service.repository.FindBidByItem(item, bidUser)
+	if nil == existingBid {
+		newBid := models.NewBidFromValues(item, form.BidValue, form.ActionUser)
+		err := service.repository.SaveBid(newBid)
 		if err != nil {
 			log.Println("could not save bid on item due to err:", err)
 			return nil, err
@@ -61,7 +67,8 @@ func (service *ItemServiceImplementor) PlaceItemBid(
 		placedBid = newBid
 	} else {
 		existingBid.Value = form.BidValue
-		err := service.bidRepository.Update(existingBid)
+		existingBid.UserUpdatedBy = form.ActionUser.ID
+		err := service.repository.UpdateBid(existingBid)
 		if err != nil {
 			log.Println("could not save bid on item due to err:", err)
 			return nil, err
@@ -73,8 +80,9 @@ func (service *ItemServiceImplementor) PlaceItemBid(
 }
 
 func initItemService(conn *gorm.DB) ItemService {
-	return &ItemServiceImplementor{
-		itemRepository: repositories.NewItemRepository(conn),
-		bidRepository: repositories.NewBidRepository(conn),
+	itemService := &ItemServiceImplementor{
+		repository: repositories.NewRepository(conn),
 	}
+
+	return itemService
 }

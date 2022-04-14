@@ -20,7 +20,7 @@ func RegisterUser(c *gin.Context) {
 	}
 	// Tap into DB connection.
 	dbConn := actions.GetDBConnectionByContext(c)
-	if !repositories.NewUserRepository(dbConn).FindByEmail(registerUserForm.Email).IsZero() {
+	if nil != repositories.NewRepository(dbConn).FindUserByEmail(registerUserForm.Email) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": actions.AccountWithEmailExists,
 			"email": registerUserForm.Email,

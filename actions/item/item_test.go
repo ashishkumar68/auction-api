@@ -29,13 +29,12 @@ var _ = Describe("Item Tests", func() {
 
 	contentTypeJson := "application/json"
 	var dbConnection *gorm.DB
-	var itemRepository *repositories.ItemRepository
-	var userRepository *repositories.UserRepository
+	var repository *repositories.Repository
+
 	var user *models.User
 	cleanUpTables := func() {
-		dbConnection = database.NewConnectionWithContext(context.TODO())
-		itemRepository = repositories.NewItemRepository(dbConnection)
-		userRepository = repositories.NewUserRepository(dbConnection)
+		dbConnection = database.GetDBHandle().WithContext(context.TODO())
+		repository = repositories.NewRepository(dbConnection)
 		dbConnection.Exec(`SET foreign_key_checks = 0;`)
 		dbConnection.Exec(`TRUNCATE TABLE users;`)
 		dbConnection.Exec(`TRUNCATE TABLE items;`)
@@ -46,16 +45,18 @@ var _ = Describe("Item Tests", func() {
 INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
 VALUES (1, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
 `)
-		user = userRepository.FindByEmail("johnsmith24@abc.com")
+		user = repository.FindUserByEmail("johnsmith24@abc.com")
 
 	}
 	BeforeEach(func() {
 		cleanUpTables()
+
+		Expect(user).To(Not(BeNil()))
 	})
 
 	Context("Don't allow create item as an Anonymous user.", func() {
 		BeforeEach(func() {
-			items := itemRepository.FindByName("ABC Washing Machine")
+			items := repository.FindItemByName("ABC Washing Machine")
 			Expect(items).To(BeEmpty())
 			Expect(user.IsZero()).To(BeFalse())
 		})
@@ -100,10 +101,10 @@ VALUES (1, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a
 
 			Expect(err).To(BeNil(), "Could not Parse HTTP message response.")
 			Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-			items := itemRepository.FindByName("ABC Washing Machine")
+			items := repository.FindItemByName("ABC Washing Machine")
 			Expect(len(items)).To(Equal(1))
 
-			actualItem := itemRepository.FindByUuid(item.Uuid)
+			actualItem := repository.FindItemByUuid(item.Uuid)
 			Expect(actualItem).ToNot(BeNil())
 			Expect(actualItem.Name).To(ContainSubstring("ABC Washing Machine"))
 			//createdBy := userRepository.Find(*actualItem.User)
@@ -115,11 +116,11 @@ VALUES (1, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a
 	Context("I should be able to list the items anonymously as well as logged in user.", func() {
 		BeforeEach(func() {
 			dbConnection.Exec(`
-INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value) VALUES 
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value) VALUES
 (1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,1,1,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000'),
 (2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,1,1,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000');
 `)
-			items := itemRepository.FindByName("ABC Item")
+			items := repository.FindItemByName("ABC Item")
 			Expect(len(items)).To(Equal(2))
 		})
 
@@ -179,6 +180,47 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 			Expect(len(items)).To(Equal(2))
 			Expect(items[0].Name).To(ContainSubstring("ABC Item"))
 			Expect(items[1].Name).To(ContainSubstring("ABC Item"))
+		})
+	})
+
+	Context("I should be able to Bid on items if I am logged in", func() {
+		BeforeEach(func() {
+			dbConnection.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,1,1,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000'),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,1,1,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000');
+`)
+			items := repository.FindItemByName("ABC Item")
+			Expect(len(items)).To(Equal(2))
+		})
+
+		It("Should allow bidding on items for logged in user.", func() {
+			bidPayload := `
+{
+	"bidValue": 12
+}
+`
+			token, err := services.GenerateNewJwtToken(user, services.TokenTypeAccess)
+			Expect(err).To(BeNil(), "Could not generate new token for create item test.")
+			itemId := uint(1)
+			resp, err := client.MakeRequest(
+				fmt.Sprintf("%s://%s:%s%s/items/%d/bid", protocol, host, port, prefix, itemId),
+				"POST",
+				map[string]string{},
+				map[string]string{"Authorization": token},
+				time.Second*10,
+				[]byte(bidPayload),
+			)
+			defer resp.Body.Close()
+			Expect(err).To(BeNil(), "Could not detect service available.")
+			Expect(resp).To(Not(BeNil()), "Could not detect service available.")
+			Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+			item := repository.FindItemById(itemId)
+			newBid := repository.FindBidByItem(item, user)
+			Expect(newBid).To(Not(BeNil()))
+			Expect(newBid.IsZero()).To(BeFalse())
+			Expect(newBid.Value).To(Equal(models.Value(12)))
 		})
 	})
 })

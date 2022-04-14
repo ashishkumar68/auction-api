@@ -3,30 +3,21 @@ package repositories
 import (
 	"fmt"
 	"github.com/ashishkumar68/auction-api/models"
-	"gorm.io/gorm"
 	"log"
 )
 
-type BidRepository struct {
-	BaseRepository
-}
-
-func initBidRepository(conn *gorm.DB) *BidRepository {
-	return &BidRepository{
-		BaseRepository: BaseRepository{connection: conn},
-	}
-}
-
-func (repo *BidRepository) Find(id uint) *models.Bid {
+func (repo *Repository) FindBidById(id uint) *models.Bid {
 	var bid models.Bid
-	repo.connection.Find(&bid, id)
+	repo.connection.Model(&models.Bid{}).Find(&bid, id)
+	if bid.IsZero() {
+		return nil
+	}
 
 	return &bid
 }
 
-func (repo *BidRepository) Save(bid *models.Bid) error {
-	log.Println("received bid while saving", *bid)
-	result := repo.connection.Create(bid)
+func (repo *Repository) SaveBid(bid *models.Bid) error {
+	result := repo.connection.Model(&models.Bid{}).Create(bid)
 	if result.Error != nil {
 		log.Println(fmt.Sprintf("Could not insert new record for type: %T", bid))
 		log.Println(fmt.Sprintf("Insert error: %s", result.Error))
@@ -36,8 +27,8 @@ func (repo *BidRepository) Save(bid *models.Bid) error {
 	return nil
 }
 
-func (repo *BidRepository) Update(bid *models.Bid) error {
-	result := repo.connection.Save(bid)
+func (repo *Repository) UpdateBid(bid *models.Bid) error {
+	result := repo.connection.Model(&models.Bid{}).Save(bid)
 	if result.Error != nil {
 		log.Println(fmt.Sprintf("Could not update record for type: %T", bid))
 		log.Println(fmt.Sprintf("Update error: %s", result.Error))
@@ -47,23 +38,30 @@ func (repo *BidRepository) Update(bid *models.Bid) error {
 	return nil
 }
 
-func (repo *BidRepository) FindByUuid(uuid string) *models.Bid {
+func (repo *Repository) FindBidByUuid(uuid string) *models.Bid {
 	var bid models.Bid
-	repo.connection.Preload("UserCreated").Where("uuid = ?", uuid).First(&bid)
+	repo.connection.Model(&models.Bid{}).Preload("UserCreated").Where("uuid = ?", uuid).First(&bid)
+	if bid.IsZero() {
+		return nil
+	}
 
 	return &bid
 }
 
-func (repo *BidRepository) FindByItem(item *models.Item, user *models.User) *models.Bid {
+func (repo *Repository) FindBidByItem(item *models.Item, user *models.User) *models.Bid {
 	var bid models.Bid
 
 	repo.connection.
-		Table("bids").
+		Model(&models.Bid{}).
+		//Table("bids").
 		Select("bids.*").
 		Joins("JOIN items ON bids.item_id = items.id").
 		Joins("JOIN users ON bids.created_by = users.id").
 		Where("users.id = ? AND items.id = ?", user.ID, item.ID).
-		Find(&bid)
+		Scan(&bid)
+	if bid.IsZero() {
+		return nil
+	}
 
 	return &bid
 }

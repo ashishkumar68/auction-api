@@ -8,20 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewUserRepository(conn *gorm.DB) *UserRepository {
-	wire.Build(initUserRepository)
-
-	return nil
-}
-
-func NewItemRepository(conn *gorm.DB) *ItemRepository {
-	wire.Build(initItemRepository)
-
-	return nil
-}
-
-func NewBidRepository(conn *gorm.DB) *BidRepository {
-	wire.Build(initBidRepository)
+func NewRepository(conn *gorm.DB) *Repository {
+	wire.Build(initRepository)
 
 	return nil
 }

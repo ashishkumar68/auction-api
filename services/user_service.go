@@ -16,12 +16,12 @@ type UserService interface {
 }
 
 type UserServiceImplementor struct {
-	userRepository *repositories.UserRepository
+	repository *repositories.Repository
 }
 
 func initUserService(db *gorm.DB) UserService {
 	return &UserServiceImplementor{
-		userRepository: repositories.NewUserRepository(db),
+		repository: repositories.NewRepository(db),
 	}
 }
 
@@ -37,7 +37,7 @@ func (service *UserServiceImplementor) NewRegister(
 		return nil, err
 	}
 	newUser.Password = hashedPass
-	err = service.userRepository.Save(newUser)
+	err = service.repository.SaveUser(newUser)
 	if err != nil {
 		log.Println(fmt.Sprintf("Could not save user information."))
 		log.Println("err:", err)
@@ -51,8 +51,8 @@ func (service *UserServiceImplementor) Login(
 	ctx context.Context,
 	form forms.LoginUserForm) (*models.LoggedInUser, error) {
 
-	existingUser := service.userRepository.FindByEmail(form.Email)
-	if existingUser.IsZero() {
+	existingUser := service.repository.FindUserByEmail(form.Email)
+	if nil == existingUser {
 		return nil, UserEmailDoesntExist
 	}
 	if !CompareHashAndPass(existingUser.Password, form.Password) {
@@ -76,4 +76,3 @@ func (service *UserServiceImplementor) Login(
 
 	return user, nil
 }
-

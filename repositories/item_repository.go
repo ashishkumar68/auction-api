@@ -7,24 +7,17 @@ import (
 	"log"
 )
 
-type ItemRepository struct {
-	BaseRepository
-}
-
-func initItemRepository(conn *gorm.DB) *ItemRepository {
-	return &ItemRepository{
-		BaseRepository: BaseRepository{connection: conn},
-	}
-}
-
-func (repo *ItemRepository) Find(id uint) *models.Item {
+func (repo *Repository) FindItemById(id uint) *models.Item {
 	var item models.Item
 	repo.connection.Find(&item, id)
+	if item.IsZero() {
+		return nil
+	}
 
 	return &item
 }
 
-func (repo *ItemRepository) Save(item *models.Item) error {
+func (repo *Repository) SaveItem(item *models.Item) error {
 	result := repo.connection.Create(item)
 	if result.Error != nil {
 		log.Println(fmt.Sprintf("Could not insert new record for type: %T", item))
@@ -35,7 +28,7 @@ func (repo *ItemRepository) Save(item *models.Item) error {
 	return nil
 }
 
-func (repo *ItemRepository) Update(item *models.Item) error {
+func (repo *Repository) UpdateItem(item *models.Item) error {
 	result := repo.connection.Save(item)
 	if result.Error != nil {
 		log.Println(fmt.Sprintf("Could not update record for type: %T", item))
@@ -46,21 +39,24 @@ func (repo *ItemRepository) Update(item *models.Item) error {
 	return nil
 }
 
-func (repo *ItemRepository) FindByUuid(uuid string) *models.Item {
+func (repo *Repository) FindItemByUuid(uuid string) *models.Item {
 	var item models.Item
-	repo.connection.Preload("UserCreated").Where("uuid = ?", uuid).First(&item)
+	repo.connection.Joins("UserCreated").Where("items.uuid = ?", uuid).First(&item)
+	if item.IsZero() {
+		return nil
+	}
 
 	return &item
 }
 
-func (repo *ItemRepository) FindByName(name string) []models.Item {
+func (repo *Repository) FindItemByName(name string) []models.Item {
 	var items []models.Item
 	repo.connection.Where("name LIKE ?", "%"+name+"%").Find(&items)
 
 	return items
 }
 
-func (repo *ItemRepository) List() *gorm.DB {
+func (repo *Repository) ListItems() *gorm.DB {
 	return repo.connection.
 		Joins("UserCreated").
 		Joins("UserUpdated").

@@ -3,28 +3,20 @@ package repositories
 import (
 	"fmt"
 	"github.com/ashishkumar68/auction-api/models"
-	"gorm.io/gorm"
 	"log"
 )
 
-type UserRepository struct {
-	BaseRepository
-}
-
-func initUserRepository(conn *gorm.DB) *UserRepository {
-	return &UserRepository{
-		BaseRepository: BaseRepository{connection: conn},
-	}
-}
-
-func (repo *UserRepository) Find(id uint) *models.User {
+func (repo *Repository) FindUserById(id uint) *models.User {
 	var user models.User
 	repo.connection.Find(&user, id)
+	if user.IsZero() {
+		return nil
+	}
 
 	return &user
 }
 
-func (repo *UserRepository) Save(user *models.User) error {
+func (repo *Repository) SaveUser(user *models.User) error {
 	result := repo.connection.Create(user)
 	if result.Error != nil {
 		log.Println(fmt.Sprintf("Could not insert new record for type: %T", user))
@@ -35,7 +27,7 @@ func (repo *UserRepository) Save(user *models.User) error {
 	return nil
 }
 
-func (repo *UserRepository) Update(user *models.User) error {
+func (repo *Repository) UpdateUser(user *models.User) error {
 	result := repo.connection.Save(user)
 	if result.Error != nil {
 		log.Println(fmt.Sprintf("Could not update record for type: %T", user))
@@ -46,9 +38,12 @@ func (repo *UserRepository) Update(user *models.User) error {
 	return nil
 }
 
-func (repo *UserRepository) FindByEmail(email string) *models.User {
+func (repo *Repository) FindUserByEmail(email string) *models.User {
 	var user models.User
 	repo.connection.Where("email = ? AND deleted_at IS NULL", email).First(&user)
+	if user.IsZero() {
+		return nil
+	}
 
 	return &user
 }

@@ -31,6 +31,10 @@ type Item struct {
 	Bids []Bid
 }
 
+func (Item) TableName() string {
+	return "items"
+}
+
 func NewItemFromValues(
 	name string,
 	description string,
@@ -55,9 +59,13 @@ func GetAvailableItemCategories() []int {
 type Bid struct {
 	IdentityAuditableModel
 
-	ItemId uint `gorm:"column:item_id;index" json:"-"`
+	ItemId uint  `gorm:"column:item_id;index" json:"-"`
 	Item   *Item `gorm:"foreignKey:ItemId" json:"item"`
 	Value  Value `gorm:"type:float(16,4)" json:"bidValue"`
+}
+
+func (Bid) TableName() string {
+	return "bids"
 }
 
 func NewBidFromValues(
@@ -68,18 +76,19 @@ func NewBidFromValues(
 
 	newBid := &Bid{
 		ItemId: item.ID,
-		Item: nil,
+		Item:   nil,
 		Value:  value,
 	}
 	if bidBy != nil {
-		newBid.UserCreatedBy = &bidBy.ID
+		newBid.UserCreatedBy = bidBy.ID
+		newBid.UserUpdatedBy = bidBy.ID
 	}
 
 	return newBid
 }
 
 func (bid *Bid) AfterCreate(db *gorm.DB) error {
-	if bid.UserCreatedBy == nil {
+	if bid.UserCreatedBy == 0 {
 		return EmptyItemBidUserError
 	}
 

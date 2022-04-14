@@ -13,16 +13,18 @@ type RepositoryTestSuite struct {
 	suite.Suite
 	DB *gorm.DB
 
-	userRepo	*UserRepository
-	itemRepo	*ItemRepository
-	bidRepo		*BidRepository
+	repository *Repository
+}
+
+// SetupSuite runs before suite
+func (suite *RepositoryTestSuite) SetupSuite() {
+	config.LoadDBConfig()
+	database.InitialiseDatabase()
 }
 
 // SetupTest runs before each test.
 func (suite *RepositoryTestSuite) SetupTest() {
-	config.LoadDBConfig()
-
-	suite.DB = database.NewConnectionWithContext(context.TODO())
+	suite.DB = database.GetDBHandle().WithContext(context.TODO())
 	suite.DB.Exec(`SET foreign_key_checks = 0;`)
 	suite.DB.Exec(`TRUNCATE TABLE users;`)
 	suite.DB.Exec(`TRUNCATE TABLE items;`)
@@ -39,11 +41,9 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 ;
 `)
 
-	suite.bidRepo  = NewBidRepository(suite.DB)
-	suite.itemRepo = NewItemRepository(suite.DB)
-	suite.userRepo = NewUserRepository(suite.DB)
+	suite.repository = NewRepository(suite.DB)
 
-	user := suite.userRepo.Find(1)
+	user := suite.repository.FindUserById(1)
 	suite.DB.Set("actionUser", user)
 }
 

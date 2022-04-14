@@ -40,18 +40,16 @@ func NewUserFromValues(
 	}
 }
 
+func (User) TableName() string {
+	return "users"
+}
+
 func (user User) GetLoginId() string {
 	return user.Email
 }
 
 func (user *User) BeforeCreate(db *gorm.DB) (err error) {
 	user.AssignUuid()
-	actionUser := GetActionUser(db)
-	if actionUser.IsZero() {
-		return nil
-	}
-	user.CreatedBy = &actionUser.ID
-	user.UpdatedBy = &actionUser.ID
 
 	return nil
 }

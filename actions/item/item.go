@@ -15,6 +15,8 @@ import (
 
 func CreateItem(c *gin.Context) {
 	var addItemForm forms.AddNewItemForm
+
+	addItemForm.ActionUser = actions.GetActionUserByContext(c)
 	if err := c.ShouldBindJSON(&addItemForm); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -33,8 +35,8 @@ func CreateItem(c *gin.Context) {
 func ListItems(c *gin.Context) {
 	pg := paginate.New()
 	db := actions.GetDBConnectionByContext(c)
-	itemRepo := repositories.NewItemRepository(db)
+	repository := repositories.NewRepository(db)
 
-	c.JSON(http.StatusOK, pg.With(itemRepo.List()).Request(c.Request).Response(&[]models.Item{}))
+	c.JSON(http.StatusOK, pg.With(repository.ListItems()).Request(c.Request).Response(&[]models.Item{}))
 	return
 }

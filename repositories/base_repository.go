@@ -4,6 +4,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type BaseRepository struct {
+type Repository struct {
 	connection *gorm.DB
+}
+
+func initRepository(conn *gorm.DB) *Repository {
+	return &Repository{
+		connection: conn,
+	}
 }

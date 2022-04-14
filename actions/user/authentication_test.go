@@ -39,10 +39,10 @@ var _ = Describe("Auth Tests", func() {
 
 	contentTypeJson := "application/json"
 	var dbConnection *gorm.DB
-	var userRepository *repositories.UserRepository
+	var repository *repositories.Repository
 	cleanUpTables := func() {
-		dbConnection = database.NewConnectionWithContext(context.TODO())
-		userRepository = repositories.NewUserRepository(dbConnection)
+		dbConnection = database.GetDBHandle().WithContext(context.TODO())
+		repository = repositories.NewRepository(dbConnection)
 		dbConnection.Exec(`SET foreign_key_checks = 0;`)
 		dbConnection.Exec(`TRUNCATE TABLE users;`)
 		dbConnection.Exec(`TRUNCATE TABLE items;`)
@@ -108,8 +108,8 @@ VALUES ("40449c42-1a4d-4dad-b942-48ded845329e", NOW(), NOW(), "John", "Smith", "
 
 		It("should not allow login with non-existing account", func() {
 			invalidEmail := "blablaemail@abc.bla"
-			existingUser := userRepository.FindByEmail(invalidEmail)
-			Expect(existingUser.IsZero()).To(BeTrue())
+			existingUser := repository.FindUserByEmail(invalidEmail)
+			Expect(existingUser).To(BeNil())
 			payload := `
 {
     "email": "blablaemail@abc.bla",
@@ -125,7 +125,7 @@ VALUES ("40449c42-1a4d-4dad-b942-48ded845329e", NOW(), NOW(), "John", "Smith", "
 		})
 
 		It("should not allow login with incorrect credentials", func() {
-			existingUser := userRepository.FindByEmail("johnsmith24@abc.com")
+			existingUser := repository.FindUserByEmail("johnsmith24@abc.com")
 			Expect(existingUser.IsZero()).To(BeFalse())
 			payload := `
 {
@@ -142,7 +142,7 @@ VALUES ("40449c42-1a4d-4dad-b942-48ded845329e", NOW(), NOW(), "John", "Smith", "
 		})
 
 		It("should allow login with correct credentials", func() {
-			existingUser := userRepository.FindByEmail("johnsmith24@abc.com")
+			existingUser := repository.FindUserByEmail("johnsmith24@abc.com")
 			Expect(existingUser.IsZero()).To(BeFalse())
 			payload := `
 {

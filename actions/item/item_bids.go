@@ -11,20 +11,23 @@ import (
 	"strconv"
 )
 
-func PlaceBidOnItem(c *gin.Context)	{
+func PlaceBidOnItem(c *gin.Context) {
 	var placeBidForm forms.PlaceNewItemBidForm
 	itemId, err := strconv.Atoi(c.Param("itemId"))
+	placeBidForm.ActionUser = actions.GetActionUserByContext(c)
+
 	if err != nil {
 		log.Println(fmt.Sprintf("Could not save bid: %s", err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
 		return
 	}
+
 	placeBidForm.ItemId = uint(itemId)
-	placeBidForm.BidUser = actions.GetActionUserByContext(c)
 	if err = c.ShouldBindJSON(&placeBidForm); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	placeBidForm.BidUserId = actions.GetActionUserByContext(c).GetId()
 	itemService := services.NewItemService(actions.GetDBConnectionByContext(c))
 
 	bid, err := itemService.PlaceItemBid(c, placeBidForm)

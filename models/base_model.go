@@ -23,10 +23,10 @@ type BaseModel struct {
 }
 
 type AuditModel struct {
-	UserCreatedBy *uint `gorm:"column:created_by;index" json:"-"`
+	UserCreatedBy uint  `gorm:"column:created_by;index;not null" json:"-"`
 	UserCreated   *User `gorm:"foreignKey:UserCreatedBy" json:"createdBy,omitempty"`
 
-	UserUpdatedBy *uint `gorm:"column:updated_by;index" json:"-"`
+	UserUpdatedBy uint  `gorm:"column:updated_by;index;not null" json:"-"`
 	UserUpdated   *User `gorm:"foreignKey:UserUpdatedBy" json:"updatedBy,omitempty"`
 
 	UserDeletedBy *uint `gorm:"column:deleted_by;index" json:"-"`
@@ -65,34 +65,12 @@ func (base *BaseModel) AssignUuid() {
 
 func (base *IdentityAuditableModel) BeforeCreate(db *gorm.DB) (err error) {
 	base.AssignUuid()
-	actionUser := GetActionUser(db)
-	if actionUser.IsZero() {
-		return nil
-	}
-	if base.UserCreatedBy == nil {
-		base.UserCreatedBy = &actionUser.ID
-	}
-	if base.UserUpdatedBy == nil {
-		base.UserUpdatedBy = &actionUser.ID
-	}
 
 	return nil
 }
 
 func (base BaseModel) GetCreatedAt() time.Time {
 	return base.CreatedAt
-}
-
-func (base *IdentityAuditableModel) BeforeSave(db *gorm.DB) error {
-	actionUser := GetActionUser(db)
-	if actionUser.IsZero() {
-		return nil
-	}
-	if base.UserUpdatedBy == nil {
-		base.UserUpdatedBy = &actionUser.ID
-	}
-
-	return nil
 }
 
 func (base BaseModel) IsDeleted() bool {
@@ -106,13 +84,4 @@ type ActionedMetaInfo struct {
 
 type RequestedMetaInfo struct {
 	RequestedAt time.Time `gorm:"name:requested_at;type:datetime" json:"requestedAt,omitempty"`
-}
-
-func GetActionUser(db *gorm.DB) User {
-	var actionUser User
-	if user, ok := db.Get("actionUser"); ok {
-		actionUser = user.(User)
-	}
-
-	return actionUser
 }

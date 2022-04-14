@@ -29,9 +29,7 @@ func AuthenticatedRoute() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		dbConnection := database.NewConnectionWithContext(c)
 		if isAnonymousRoute(c) {
-			c.Set("db", dbConnection)
 			c.Next()
 			return
 		}
@@ -44,16 +42,24 @@ func AuthenticatedRoute() gin.HandlerFunc {
 		}
 
 		email := token.Header["username"].(string)
-		loggedInUser := repositories.NewUserRepository(dbConnection).FindByEmail(email)
-		if loggedInUser.IsZero() || !loggedInUser.IsActive {
+		dbConnection := database.GetDBHandle().WithContext(c)
+		loggedInUser := repositories.NewRepository(dbConnection).FindUserByEmail(email)
+		if nil == loggedInUser || loggedInUser.IsZero() || !loggedInUser.IsActive {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": actions.InvalidCredentials})
 			return
 		}
-		dbConnection = dbConnection.Set("actionUser", *loggedInUser)
-		// set logged-in user and db connection to context to be used in further handlers.
+		// set logged-in user to context to be used in further handlers.
 		c.Set("actionUser", loggedInUser)
-		c.Set("db", dbConnection)
-
 		c.Next()
 	}
+}
+
+func isSuccessStatus(statusCode int) bool {
+	for _, code := range []int{http.StatusOK, http.StatusCreated, http.StatusAccepted, http.StatusNoContent} {
+		if code == statusCode {
+			return true
+		}
+	}
+
+	return false
 }
