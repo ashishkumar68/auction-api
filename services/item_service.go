@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	BidItemNotFoundError	= fmt.Errorf("bid item was not found")
-	BidUserNotFoundError	= fmt.Errorf("bid user details was not found")
-	ItemNotBidEligible		= fmt.Errorf("this item is not eligible for bidding")
+	BidItemNotFoundError = fmt.Errorf("bid item was not found")
+	BidUserNotFoundError = fmt.Errorf("bid user details was not found")
+	ItemNotBidEligible   = fmt.Errorf("this item is not eligible for bidding")
 )
 
 type ItemService interface {
