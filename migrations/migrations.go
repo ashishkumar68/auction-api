@@ -41,13 +41,15 @@ END
 	if err := db.Migrator().DropTable(
 		&models.User{},
 		&models.Item{},
-		&models.Bid{}); err != nil {
+		&models.Bid{},
+		&models.Reaction{}); err != nil {
 		log.Fatalln(fmt.Sprintf("could not drop tables due to:"), err)
 	}
 	if err := db.Migrator().CreateTable(
 		&models.User{},
 		&models.Item{},
-		&models.Bid{}); err != nil {
+		&models.Bid{},
+		&models.Reaction{}); err != nil {
 		log.Fatalln(fmt.Sprintf("could not create tables due to:"), err)
 	}
 	db.Exec("SET foreign_key_checks = 1;")
