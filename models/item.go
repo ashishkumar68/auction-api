@@ -56,6 +56,15 @@ func NewItemFromValues(
 	}
 }
 
+func (item Item) IsBidEligible() bool {
+
+	if time.Now().Before(item.LastBidDate) {
+		return true
+	}
+
+	return false
+}
+
 func GetAvailableItemCategories() []int {
 	return []int{CategoryElectronicsInt, CategoryAppliancesInt, CategoryHomeInt, CategoryArtInt}
 }

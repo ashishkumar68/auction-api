@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	BidItemNotFoundError = fmt.Errorf("bid item was not found")
-	BidUserNotFoundError = fmt.Errorf("bid user details was not found")
+	BidItemNotFoundError	= fmt.Errorf("bid item was not found")
+	BidUserNotFoundError	= fmt.Errorf("bid user details was not found")
+	ItemNotBidEligible		= fmt.Errorf("this item is not eligible for bidding")
 )
 
 type ItemService interface {
@@ -55,6 +56,9 @@ func (service *ItemServiceImplementor) PlaceItemBid(
 	item := service.repository.FindItemById(form.ItemId)
 	if nil == item {
 		return nil, BidItemNotFoundError
+	}
+	if !item.IsBidEligible() {
+		return nil, ItemNotBidEligible
 	}
 
 	var placedBid *models.Bid
