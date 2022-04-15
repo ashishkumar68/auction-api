@@ -29,7 +29,7 @@ func (suite *RepositoryTestSuite) SetupTest() {
 	suite.DB.Exec(`TRUNCATE TABLE users;`)
 	suite.DB.Exec(`TRUNCATE TABLE items;`)
 	suite.DB.Exec(`TRUNCATE TABLE bids;`)
-	suite.DB.Exec(`SET foreign_key_checks = 1;`)
+
 	suite.DB.Exec(`
 INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
 VALUES (1, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
@@ -41,10 +41,20 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 ;
 `)
 
+	suite.DB.Exec(`SET foreign_key_checks = 1;`)
 	suite.repository = NewRepository(suite.DB)
 
 	user := suite.repository.FindUserById(1)
 	suite.DB.Set("actionUser", user)
+}
+
+func (suite *RepositoryTestSuite) TearDownTest() {
+
+	suite.DB.Exec(`SET foreign_key_checks = 0;`)
+	suite.DB.Exec(`TRUNCATE TABLE users;`)
+	suite.DB.Exec(`TRUNCATE TABLE items;`)
+	suite.DB.Exec(`TRUNCATE TABLE bids;`)
+	suite.DB.Exec(`SET foreign_key_checks = 1;`)
 }
 
 func TestRepositoryTestSuite(t *testing.T) {

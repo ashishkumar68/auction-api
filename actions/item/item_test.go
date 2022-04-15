@@ -39,19 +39,25 @@ var _ = Describe("Item Tests", func() {
 		dbConnection.Exec(`TRUNCATE TABLE users;`)
 		dbConnection.Exec(`TRUNCATE TABLE items;`)
 		dbConnection.Exec(`TRUNCATE TABLE bids;`)
-		dbConnection.Exec(`SET foreign_key_checks = 1;`)
 
 		dbConnection.Exec(`
 INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
 VALUES (1, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
 `)
+		dbConnection.Exec(`SET foreign_key_checks = 1;`)
 		user = repository.FindUserByEmail("johnsmith24@abc.com")
-
 	}
 	BeforeEach(func() {
 		cleanUpTables()
 
 		Expect(user).To(Not(BeNil()))
+	})
+	AfterEach(func() {
+		dbConnection.Exec(`SET foreign_key_checks = 0;`)
+		dbConnection.Exec(`TRUNCATE TABLE users;`)
+		dbConnection.Exec(`TRUNCATE TABLE items;`)
+		dbConnection.Exec(`TRUNCATE TABLE bids;`)
+		dbConnection.Exec(`SET foreign_key_checks = 1;`)
 	})
 
 	Context("Don't allow create item as an Anonymous user.", func() {

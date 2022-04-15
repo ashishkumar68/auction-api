@@ -52,6 +52,13 @@ var _ = Describe("Auth Tests", func() {
 	BeforeEach(func() {
 		cleanUpTables()
 	})
+	AfterEach(func() {
+		dbConnection.Exec(`SET foreign_key_checks = 0;`)
+		dbConnection.Exec(`TRUNCATE TABLE users;`)
+		dbConnection.Exec(`TRUNCATE TABLE items;`)
+		dbConnection.Exec(`TRUNCATE TABLE bids;`)
+		dbConnection.Exec(`SET foreign_key_checks = 1;`)
+	})
 
 	Context("I should be able to register as a new user.", func() {
 		email := "johndoe123@abc.com"
@@ -104,7 +111,7 @@ var _ = Describe("Auth Tests", func() {
 		BeforeEach(func() {
 			dbConnection.Exec(`
 INSERT INTO users(uuid, created_at, updated_at, first_name, last_name, email, password) 
-VALUES ("40449c42-1a4d-4dad-b942-48ded845329e", NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6")`)
+VALUES (uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmithtest@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6")`)
 		})
 
 		It("should not allow login with non-existing account", func() {
@@ -126,11 +133,11 @@ VALUES ("40449c42-1a4d-4dad-b942-48ded845329e", NOW(), NOW(), "John", "Smith", "
 		})
 
 		It("should not allow login with incorrect credentials", func() {
-			existingUser := repository.FindUserByEmail("johnsmith24@abc.com")
+			existingUser := repository.FindUserByEmail("johnsmithtest@abc.com")
 			Expect(existingUser.IsZero()).To(BeFalse())
 			payload := `
 {
-    "email": "johnsmith24@abc.com",
+    "email": "johnsmithtest@abc.com",
     "password": "blabla"
 }
 `
@@ -143,11 +150,11 @@ VALUES ("40449c42-1a4d-4dad-b942-48ded845329e", NOW(), NOW(), "John", "Smith", "
 		})
 
 		It("should allow login with correct credentials", func() {
-			existingUser := repository.FindUserByEmail("johnsmith24@abc.com")
+			existingUser := repository.FindUserByEmail("johnsmithtest@abc.com")
 			Expect(existingUser.IsZero()).To(BeFalse())
 			payload := `
 {
-    "email": "johnsmith24@abc.com",
+    "email": "johnsmithtest@abc.com",
     "password": "secret12"
 }
 `
@@ -162,7 +169,7 @@ VALUES ("40449c42-1a4d-4dad-b942-48ded845329e", NOW(), NOW(), "John", "Smith", "
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			Expect(loginResponse.FirstName).To(Equal("John"))
 			Expect(loginResponse.LastName).To(Equal("Smith"))
-			Expect(loginResponse.Email).To(Equal("johnsmith24@abc.com"))
+			Expect(loginResponse.Email).To(Equal("johnsmithtest@abc.com"))
 			Expect(loginResponse.AccessToken).ToNot(Equal(""))
 			Expect(loginResponse.RefreshToken).ToNot(Equal(""))
 		})
