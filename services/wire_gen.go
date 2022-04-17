@@ -21,3 +21,8 @@ func NewItemService(conn *gorm.DB) ItemService {
 	itemService := initItemService(conn)
 	return itemService
 }
+
+func NewReactionService(conn *gorm.DB) ReactionService {
+	reactionService := InitReactionService(conn)
+	return reactionService
+}

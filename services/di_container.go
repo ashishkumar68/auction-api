@@ -19,3 +19,9 @@ func NewItemService(conn *gorm.DB) ItemService {
 
 	return nil
 }
+
+func NewReactionService(conn *gorm.DB) ReactionService {
+	wire.Build(InitReactionService)
+
+	return nil
+}

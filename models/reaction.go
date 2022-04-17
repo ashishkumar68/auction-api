@@ -27,3 +27,11 @@ func NewReactionFromValues(item *Item, reactionType uint8, reactionBy *User) *Re
 
 	return &newReaction
 }
+
+func (r Reaction) IsTypeSameAs(reaction Reaction) bool {
+	if r.Type == reaction.Type {
+		return true
+	}
+
+	return false
+}
