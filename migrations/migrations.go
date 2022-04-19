@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ashishkumar68/auction-api/database"
 	"github.com/ashishkumar68/auction-api/models"
+	"gorm.io/gorm"
 	"log"
 )
 
@@ -55,4 +56,15 @@ END
 	db.Exec("SET foreign_key_checks = 1;")
 
 	log.Println("Migrations have been run successfully.")
+}
+
+func ForceTruncateAllTables(db *gorm.DB) {
+	//db.Exec("LOCK TABLES users WRITE, items WRITE, bids WRITE, reactions WRITE;")
+	db.Exec(`SET foreign_key_checks = 0;`)
+	db.Exec(`TRUNCATE TABLE users;`)
+	db.Exec(`TRUNCATE TABLE items;`)
+	db.Exec(`TRUNCATE TABLE bids;`)
+	db.Exec(`TRUNCATE TABLE reactions;`)
+	db.Exec(`SET foreign_key_checks = 1;`)
+	//db.Exec("UNLOCK TABLES;")
 }

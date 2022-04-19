@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ashishkumar68/auction-api/config"
 	"github.com/ashishkumar68/auction-api/database"
+	"github.com/ashishkumar68/auction-api/migrations"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
 	"testing"
@@ -25,10 +26,7 @@ func (suite *RepositoryTestSuite) SetupSuite() {
 // SetupTest runs before each test.
 func (suite *RepositoryTestSuite) SetupTest() {
 	suite.DB = database.GetDBHandle().WithContext(context.TODO())
-	suite.DB.Exec(`SET foreign_key_checks = 0;`)
-	suite.DB.Exec(`TRUNCATE TABLE users;`)
-	suite.DB.Exec(`TRUNCATE TABLE items;`)
-	suite.DB.Exec(`TRUNCATE TABLE bids;`)
+	migrations.ForceTruncateAllTables(suite.DB)
 
 	suite.DB.Exec(`
 INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
@@ -41,7 +39,6 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 ;
 `)
 
-	suite.DB.Exec(`SET foreign_key_checks = 1;`)
 	suite.repository = NewRepository(suite.DB)
 
 	user := suite.repository.FindUserById(1)
@@ -49,12 +46,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 }
 
 func (suite *RepositoryTestSuite) TearDownTest() {
-
-	suite.DB.Exec(`SET foreign_key_checks = 0;`)
-	suite.DB.Exec(`TRUNCATE TABLE users;`)
-	suite.DB.Exec(`TRUNCATE TABLE items;`)
-	suite.DB.Exec(`TRUNCATE TABLE bids;`)
-	suite.DB.Exec(`SET foreign_key_checks = 1;`)
+	migrations.ForceTruncateAllTables(suite.DB)
 }
 
 func TestRepositoryTestSuite(t *testing.T) {

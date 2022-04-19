@@ -15,9 +15,9 @@ type BaseModel struct {
 	ID   uint   `gorm:"name:id;primaryKey;AUTO_INCREMENT" json:"id"`
 	Uuid string `gorm:"name:uuid;type:varchar(36);unique_index" json:"uuid"`
 
-	CreatedAt time.Time  `gorm:"name:created_at;type:datetime;autoCreateTime:milli" json:"createdAt"`
-	UpdatedAt time.Time  `gorm:"name:updated_at;type:datetime;autoUpdateTime:milli" json:"updatedAt"`
-	DeletedAt *time.Time `gorm:"name:deleted_at;type:datetime" json:"deletedAt"`
+	CreatedAt time.Time  `gorm:"autoCreateTime:milli" json:"createdAt"`
+	UpdatedAt time.Time  `gorm:"autoCreateTime:milli" json:"updatedAt"`
+	DeletedAt *time.Time `json:"deletedAt"`
 
 	Version int32 `gorm:"name:version;default:1" json:"version"`
 }

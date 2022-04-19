@@ -8,8 +8,8 @@ import (
 func (repo *Repository) FindReactionByItemAndUser(item *models.Item, user *models.User) *models.Reaction {
 	var reaction models.Reaction
 	repo.connection.
-		Joins("JOIN items ON items.id = reactions.id").
-		Joins("JOIN users ON users.id = reaction.created_by").
+		Joins("JOIN items ON items.id = reactions.item_id").
+		Joins("JOIN users ON users.id = reactions.created_by").
 		Where("items.id = ? AND users.id = ?", item.ID, user.ID).
 		Find(&reaction)
 

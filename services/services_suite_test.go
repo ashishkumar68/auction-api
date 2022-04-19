@@ -4,8 +4,10 @@ import (
 	"context"
 	"github.com/ashishkumar68/auction-api/config"
 	"github.com/ashishkumar68/auction-api/database"
+	"github.com/ashishkumar68/auction-api/migrations"
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/repositories"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
 	"testing"
@@ -34,10 +36,7 @@ func (suite *ServiceTestSuite) SetupTest() {
 	suite.userService = NewUserService(suite.DB)
 	suite.itemService = NewItemService(suite.DB)
 
-	suite.DB.Exec(`SET foreign_key_checks = 0;`)
-	suite.DB.Exec(`TRUNCATE TABLE users;`)
-	suite.DB.Exec(`TRUNCATE TABLE items;`)
-	suite.DB.Exec(`TRUNCATE TABLE bids;`)
+	migrations.ForceTruncateAllTables(suite.DB)
 	suite.DB.Exec(`
 INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
 VALUES (2, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
@@ -48,17 +47,13 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 (2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,2,2,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-02")
 ;
 `)
-	suite.DB.Exec(`SET foreign_key_checks = 1;`)
 	suite.repository = repositories.NewRepository(suite.DB)
 	suite.actionUser = suite.repository.FindUserById(2)
+	assert.NotNil(suite.T(), suite.actionUser)
 }
 
 func (suite *ServiceTestSuite) TearDownTest() {
-	suite.DB.Exec(`SET foreign_key_checks = 0;`)
-	suite.DB.Exec(`TRUNCATE TABLE users;`)
-	suite.DB.Exec(`TRUNCATE TABLE items;`)
-	suite.DB.Exec(`TRUNCATE TABLE bids;`)
-	suite.DB.Exec(`SET foreign_key_checks = 1;`)
+	migrations.ForceTruncateAllTables(suite.DB)
 }
 
 func TestServiceTestSuite(t *testing.T) {

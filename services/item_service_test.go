@@ -34,15 +34,14 @@ func (suite *ServiceTestSuite) TestItDoesntPlaceBidOnItemAfterLastBidDate() {
 UPDATE items SET last_bid_date = "2022-02-01" WHERE id = 2;
 `)
 	item := suite.repository.FindItemById(2)
-	user := suite.repository.FindUserById(2)
 	assert.NotNil(suite.T(), item)
-	assert.NotNil(suite.T(), user)
+
 	assert.True(suite.T(), item.LastBidDate.Format(time.RFC3339) == "2022-02-01T00:00:00Z")
 	assert.True(suite.T(), time.Now().After(item.LastBidDate))
 
 	placeBidForm := forms.PlaceNewItemBidForm{
 		ItemId:        item.ID,
-		BidUserId:     user.ID,
+		BidUserId:     suite.actionUser.ID,
 		BidValue:      14,
 		AuditableForm: forms.AuditableForm{ActionUser: suite.actionUser},
 	}

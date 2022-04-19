@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ashishkumar68/auction-api/database"
+	"github.com/ashishkumar68/auction-api/migrations"
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/repositories"
 	. "github.com/onsi/ginkgo/v2"
@@ -43,21 +44,13 @@ var _ = Describe("Auth Tests", func() {
 	cleanUpTables := func() {
 		dbConnection = database.GetDBHandle().WithContext(context.TODO())
 		repository = repositories.NewRepository(dbConnection)
-		dbConnection.Exec(`SET foreign_key_checks = 0;`)
-		dbConnection.Exec(`TRUNCATE TABLE users;`)
-		dbConnection.Exec(`TRUNCATE TABLE items;`)
-		dbConnection.Exec(`TRUNCATE TABLE bids;`)
-		dbConnection.Exec(`SET foreign_key_checks = 1;`)
+		migrations.ForceTruncateAllTables(dbConnection)
 	}
 	BeforeEach(func() {
 		cleanUpTables()
 	})
 	AfterEach(func() {
-		dbConnection.Exec(`SET foreign_key_checks = 0;`)
-		dbConnection.Exec(`TRUNCATE TABLE users;`)
-		dbConnection.Exec(`TRUNCATE TABLE items;`)
-		dbConnection.Exec(`TRUNCATE TABLE bids;`)
-		dbConnection.Exec(`SET foreign_key_checks = 1;`)
+		migrations.ForceTruncateAllTables(dbConnection)
 	})
 
 	Context("I should be able to register as a new user.", func() {
