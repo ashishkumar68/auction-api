@@ -9,13 +9,11 @@ import (
 
 func (suite *ServiceTestSuite) TestPlaceBidOnItem() {
 	item := suite.repository.FindItemById(1)
-	user := suite.repository.FindUserById(2)
 	assert.NotNil(suite.T(), item)
-	assert.NotNil(suite.T(), user)
 
 	placeBidForm := forms.PlaceNewItemBidForm{
 		ItemId:        item.ID,
-		BidUserId:     user.ID,
+		BidUserId:     suite.actionUser.ID,
 		BidValue:      12,
 		AuditableForm: forms.AuditableForm{ActionUser: suite.actionUser},
 	}
@@ -23,7 +21,7 @@ func (suite *ServiceTestSuite) TestPlaceBidOnItem() {
 	assert.Nil(suite.T(), err)
 	assert.NotNil(suite.T(), newBid)
 
-	existingBid := suite.repository.FindBidByItem(item, user)
+	existingBid := suite.repository.FindBidByItem(item, suite.actionUser)
 	assert.NotNil(suite.T(), existingBid)
 	assert.True(suite.T(), existingBid.ID == newBid.ID)
 	assert.True(suite.T(), existingBid.Value == newBid.Value)
