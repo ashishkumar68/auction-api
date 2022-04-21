@@ -39,7 +39,7 @@ func (suite *ServiceTestSuite) SetupTest() {
 	migrations.ForceTruncateAllTables(suite.DB)
 	suite.DB.Exec(`
 INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
-VALUES (10, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith25@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
+VALUES (10, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith25@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1);
 `)
 	suite.DB.Exec(`
 INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES 

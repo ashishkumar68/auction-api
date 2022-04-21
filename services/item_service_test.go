@@ -43,7 +43,6 @@ UPDATE items SET last_bid_date = "2022-02-01" WHERE id = 2;
 		BidValue:      14,
 		AuditableForm: forms.AuditableForm{ActionUser: suite.actionUser},
 	}
-	//itemService := NewItemService(suite.DB)
 	newBid, err := suite.itemService.PlaceItemBid(context.TODO(), placeBidForm)
 	assert.Nil(suite.T(), newBid)
 	assert.NotNil(suite.T(), err)

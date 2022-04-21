@@ -2,32 +2,22 @@ package actions
 
 import (
 	"fmt"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 	"io"
+	"log"
 	"net/http"
-	"os"
 )
 
-var _ = Describe("Index Tests", func() {
-	protocol := "http"
-	host := os.Getenv("HOST")
-	port := os.Getenv("PORT")
-	prefix := "/"
+func (suite *IndexTestSuite) TestIndexRoute() {
+	indexRoute := "/"
 
-	Context("The service should be available.", func() {
+	log.Println(fmt.Sprintf("%s://%s:%s%s", suite.protocol, suite.host, suite.port, indexRoute))
+	resp, err := http.Get(fmt.Sprintf("%s://%s:%s%s", suite.protocol, suite.host, suite.port, indexRoute))
+	assert.Nil(suite.T(), err, "Could not detect service available.")
+	assert.NotNil(suite.T(), resp, "Could not detect service available.")
+	defer resp.Body.Close()
 
-		When("I request Index route", func() {
-			It("should find service available", func() {
-				resp, err := http.Get(fmt.Sprintf("%s://%s:%s%s", protocol, host, port, prefix))
-				Expect(err).To(BeNil(), "Could not detect service available.")
-				Expect(resp).To(Not(BeNil()), "Could not detect service available.")
-				defer resp.Body.Close()
-
-				body, err := io.ReadAll(resp.Body)
-				Expect(err).To(BeNil(), "Could not read response from HTTP message")
-				Expect(string(body)).To(Equal("{}"))
-			})
-		})
-	})
-})
+	body, err := io.ReadAll(resp.Body)
+	assert.Nil(suite.T(), err, "Could not read response from HTTP message")
+	assert.Equal(suite.T(), "{}", string(body))
+}

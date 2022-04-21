@@ -59,12 +59,31 @@ END
 }
 
 func ForceTruncateAllTables(db *gorm.DB) {
-	//db.Exec("LOCK TABLES users WRITE, items WRITE, bids WRITE, reactions WRITE;")
-	db.Exec(`SET foreign_key_checks = 0;`)
-	db.Exec(`TRUNCATE TABLE users;`)
-	db.Exec(`TRUNCATE TABLE items;`)
-	db.Exec(`TRUNCATE TABLE bids;`)
-	db.Exec(`TRUNCATE TABLE reactions;`)
-	db.Exec(`SET foreign_key_checks = 1;`)
-	//db.Exec("UNLOCK TABLES;")
+	for retry := 1; retry <= 5; retry++ {
+		txErr := db.Transaction(func(tx *gorm.DB) error {
+			if err := db.Exec(`SET foreign_key_checks = 0;`).Error; err != nil {
+				return err
+			}
+			if err := db.Exec(`TRUNCATE TABLE users;`).Error; err != nil {
+				return err
+			}
+			if err := db.Exec(`TRUNCATE TABLE items;`).Error; err != nil {
+				return err
+			}
+			if err := db.Exec(`TRUNCATE TABLE bids;`).Error; err != nil {
+				return err
+			}
+			if err := db.Exec(`TRUNCATE TABLE reactions;`).Error; err != nil {
+				return err
+			}
+			if err := db.Exec(`SET foreign_key_checks = 1;`).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+
+		if txErr == nil {
+			break
+		}
+	}
 }

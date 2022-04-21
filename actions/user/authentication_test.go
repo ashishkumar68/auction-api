@@ -2,19 +2,12 @@ package user
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ashishkumar68/auction-api/database"
-	"github.com/ashishkumar68/auction-api/migrations"
 	"github.com/ashishkumar68/auction-api/models"
-	"github.com/ashishkumar68/auction-api/repositories"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	"gorm.io/gorm"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
-	"os"
 )
 
 type RegisterResponseBody struct {
@@ -30,38 +23,15 @@ type LoginResponseBody struct {
 	models.LoggedInUser
 }
 
-var _ = Describe("Auth Tests", func() {
-	protocol := "http"
-	host := os.Getenv("HOST")
-	port := os.Getenv("PORT")
-	prefix := "/api"
-	registerRoute := fmt.Sprintf("%s://%s:%s%s/register", protocol, host, port, prefix)
-	loginRoute := fmt.Sprintf("%s://%s:%s%s/login", protocol, host, port, prefix)
+func (suite *UserTestSuite) TestRegisterNewUser() {
+	registerRoute := fmt.Sprintf("%s://%s:%s%s/register", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
+	email := "johndoe123@abc.com"
 
-	contentTypeJson := "application/json"
-	var dbConnection *gorm.DB
-	var repository *repositories.Repository
-	cleanUpTables := func() {
-		dbConnection = database.GetDBHandle().WithContext(context.TODO())
-		repository = repositories.NewRepository(dbConnection)
-		migrations.ForceTruncateAllTables(dbConnection)
-	}
-	BeforeEach(func() {
-		cleanUpTables()
-	})
-	AfterEach(func() {
-		migrations.ForceTruncateAllTables(dbConnection)
-	})
+	var user models.User
+	suite.DB.Where("email = ? AND deleted_at IS NULL", email).First(&user)
+	assert.True(suite.T(), user.IsZero())
 
-	Context("I should be able to register as a new user.", func() {
-		email := "johndoe123@abc.com"
-		It("should not have the user in database initially", func() {
-			var user models.User
-			dbConnection.Where("email = ? AND deleted_at IS NULL", email).First(&user)
-			Expect(user.IsZero()).To(BeTrue())
-		})
-		When("I request Submit a new register request", func() {
-			payload := `
+	payload := `
 {
   "firstName": "John",
   "lastName": "Doe",
@@ -69,102 +39,92 @@ var _ = Describe("Auth Tests", func() {
   "password": "secret12"
 }
 `
-			It("should create a new user in system.", func() {
-				resp, err := http.Post(registerRoute, contentTypeJson, bytes.NewReader([]byte(payload)))
-				Expect(err).To(BeNil(), "Could not detect service available.")
-				Expect(resp).To(Not(BeNil()), "Could not detect service available.")
-				var registerResponse RegisterResponseBody
-				body, err := io.ReadAll(resp.Body)
-				resp.Body.Close()
-				err = json.Unmarshal(body, &registerResponse)
-				Expect(err).To(BeNil(), "Could not Parse HTTP message response.")
-				Expect(registerResponse.FirstName).To(Equal("John"))
-				Expect(registerResponse.LastName).To(Equal("Doe"))
-				Expect(registerResponse.Email).To(Equal("johndoe123@abc.com"))
-				Expect(registerResponse.IsActive).To(Equal(true))
+	resp, err := http.Post(registerRoute, suite.contentTypeJson, bytes.NewReader([]byte(payload)))
+	assert.Nil(suite.T(), err, "Could not detect service available.")
+	assert.NotNil(suite.T(), resp, "Could not detect service available.")
 
-				var user models.User
-				dbConnection.Where("email = ? AND deleted_at IS NULL", email).First(&user)
-				Expect(user.IsZero()).To(BeFalse())
-				Expect(user.Password).ToNot(Equal("secret12"))
-				Expect(user.PlainPassword).To(Equal(""))
+	var registerResponse RegisterResponseBody
+	body, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	err = json.Unmarshal(body, &registerResponse)
 
-				// It should not allow creating user with same email.
-				resp, err = http.Post(registerRoute, contentTypeJson, bytes.NewReader([]byte(payload)))
-				Expect(err).To(BeNil(), "Could not detect service available.")
-				Expect(resp).To(Not(BeNil()), "Could not detect service available.")
-				defer resp.Body.Close()
-				Expect(err).To(BeNil(), "Could not Parse HTTP message response.")
-				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-			})
-		})
-	})
+	assert.Nil(suite.T(), err, "Could not Parse HTTP message response.")
+	assert.Equal(suite.T(), "John", registerResponse.FirstName)
+	assert.Equal(suite.T(), "Doe", registerResponse.LastName)
+	assert.Equal(suite.T(), "johndoe123@abc.com", registerResponse.Email)
+	assert.True(suite.T(), registerResponse.IsActive)
 
-	Context("I should be able to login with correct credentials", func() {
-		BeforeEach(func() {
-			dbConnection.Exec(`
+	suite.DB.Where("email = ? AND deleted_at IS NULL", email).First(&user)
+	assert.False(suite.T(), user.IsZero())
+	assert.NotEqual(suite.T(), "secret12", user.Password)
+	assert.Equal(suite.T(), "", user.PlainPassword)
+
+	// It should not allow creating user with same email.
+	resp, err = http.Post(registerRoute, suite.contentTypeJson, bytes.NewReader([]byte(payload)))
+	assert.Nil(suite.T(), err, "Could not detect service available.")
+	assert.NotNil(suite.T(), resp, "Could not detect service available.")
+	defer resp.Body.Close()
+	assert.Nil(suite.T(), err, "Could not Parse HTTP message response.")
+	assert.Equal(suite.T(), http.StatusBadRequest, resp.StatusCode)
+}
+
+func (suite *UserTestSuite) TestLogin() {
+	suite.DB.Exec(`
 INSERT INTO users(uuid, created_at, updated_at, first_name, last_name, email, password) 
-VALUES (uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmithtest@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6")`)
-		})
+VALUES (uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmithtest@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6")
+`)
+	loginRoute := fmt.Sprintf("%s://%s:%s%s/login", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
 
-		It("should not allow login with non-existing account", func() {
-			invalidEmail := "blablaemail@abc.bla"
-			existingUser := repository.FindUserByEmail(invalidEmail)
-			Expect(existingUser).To(BeNil())
-			payload := `
+	invalidEmail := "blablaemail@abc.bla"
+	existingUser := suite.repository.FindUserByEmail(invalidEmail)
+	assert.Nil(suite.T(), existingUser)
+	payload := `
 {
     "email": "blablaemail@abc.bla",
     "password": "blabla"
 }
 `
-			resp, err := http.Post(loginRoute, contentTypeJson, bytes.NewReader([]byte(payload)))
-			Expect(err).To(BeNil(), "Could not detect service available.")
-			Expect(resp).To(Not(BeNil()), "Could not detect service available.")
-			defer resp.Body.Close()
-			Expect(err).To(BeNil(), "Could not Parse HTTP message response.")
-			Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-		})
+	resp, err := http.Post(loginRoute, suite.contentTypeJson, bytes.NewReader([]byte(payload)))
+	assert.Nil(suite.T(), err, "Could not detect service available.")
+	assert.NotNil(suite.T(), resp, "Could not detect service available.")
+	defer resp.Body.Close()
+	assert.Nil(suite.T(), err, "Could not Parse HTTP message response.")
+	assert.Equal(suite.T(), http.StatusBadRequest, resp.StatusCode)
 
-		It("should not allow login with incorrect credentials", func() {
-			existingUser := repository.FindUserByEmail("johnsmithtest@abc.com")
-			Expect(existingUser.IsZero()).To(BeFalse())
-			payload := `
+	existingUser = suite.repository.FindUserByEmail("johnsmithtest@abc.com")
+	assert.False(suite.T(), existingUser.IsZero())
+	payload = `
 {
     "email": "johnsmithtest@abc.com",
     "password": "blabla"
 }
 `
-			resp, err := http.Post(loginRoute, contentTypeJson, bytes.NewReader([]byte(payload)))
-			Expect(err).To(BeNil(), "Could not detect service available.")
-			Expect(resp).To(Not(BeNil()), "Could not detect service available.")
-			defer resp.Body.Close()
-			Expect(err).To(BeNil(), "Could not Parse HTTP message response.")
-			Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
-		})
+	resp, err = http.Post(loginRoute, suite.contentTypeJson, bytes.NewReader([]byte(payload)))
+	assert.Nil(suite.T(), err, "Could not detect service available.")
+	assert.NotNil(suite.T(), resp, "Could not detect service available.")
+	defer resp.Body.Close()
+	assert.Nil(suite.T(), err, "Could not Parse HTTP message response.")
+	assert.Equal(suite.T(), http.StatusUnauthorized, resp.StatusCode)
 
-		It("should allow login with correct credentials", func() {
-			existingUser := repository.FindUserByEmail("johnsmithtest@abc.com")
-			Expect(existingUser.IsZero()).To(BeFalse())
-			payload := `
+	payload = `
 {
     "email": "johnsmithtest@abc.com",
     "password": "secret12"
 }
 `
-			resp, err := http.Post(loginRoute, contentTypeJson, bytes.NewReader([]byte(payload)))
-			Expect(err).To(BeNil(), "Could not detect service available.")
-			Expect(resp).To(Not(BeNil()), "Could not detect service available.")
-			var loginResponse LoginResponseBody
-			body, err := io.ReadAll(resp.Body)
-			defer resp.Body.Close()
-			err = json.Unmarshal(body, &loginResponse)
-			Expect(err).To(BeNil(), "Could not Parse HTTP message response.")
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			Expect(loginResponse.FirstName).To(Equal("John"))
-			Expect(loginResponse.LastName).To(Equal("Smith"))
-			Expect(loginResponse.Email).To(Equal("johnsmithtest@abc.com"))
-			Expect(loginResponse.AccessToken).ToNot(Equal(""))
-			Expect(loginResponse.RefreshToken).ToNot(Equal(""))
-		})
-	})
-})
+	resp, err = http.Post(loginRoute, suite.contentTypeJson, bytes.NewReader([]byte(payload)))
+
+	assert.Nil(suite.T(), err, "Could not detect service available.")
+	assert.NotNil(suite.T(), resp, "Could not detect service available.")
+	var loginResponse LoginResponseBody
+	body, err := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	err = json.Unmarshal(body, &loginResponse)
+	assert.Nil(suite.T(), err, "Could not Parse HTTP message response.")
+	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+	assert.Equal(suite.T(), "John", loginResponse.FirstName)
+	assert.Equal(suite.T(), "Smith", loginResponse.LastName)
+	assert.Equal(suite.T(), "johnsmithtest@abc.com", loginResponse.Email)
+	assert.NotEqual(suite.T(), "", loginResponse.AccessToken)
+	assert.NotEqual(suite.T(), "", loginResponse.RefreshToken)
+}
