@@ -58,15 +58,9 @@ func RemoveItemReaction(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
 		return
 	}
-	var deleteItemReaction forms.RemoveItemReactionForm
-	deleteItemReaction.ActionUser = actions.GetActionUserByContext(c)
-	deleteItemReaction.Item = item
-	if err = c.ShouldBindJSON(&deleteItemReaction); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	deleteItemReaction := forms.NewRemoveItemReactionForm(actions.GetActionUserByContext(c), item)
 	reactionService := services.NewReactionService(db)
-	err = reactionService.RemoveReactionFromItem(c, deleteItemReaction)
+	err = reactionService.RemoveReactionFromItem(c, *deleteItemReaction)
 	if err != nil {
 		log.Println(fmt.Sprintf("Could not remove reaction to item: %d due to error: %s", item.ID, err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": actions.InternalServerErrMsg})

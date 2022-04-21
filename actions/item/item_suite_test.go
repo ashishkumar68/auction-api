@@ -7,6 +7,7 @@ import (
 	"github.com/ashishkumar68/auction-api/migrations"
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/repositories"
+	"github.com/ashishkumar68/auction-api/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
@@ -23,6 +24,7 @@ type ItemTestSuite struct {
 	indexRoute      string
 	apiBaseRoute    string
 	contentTypeJson string
+	loggedInToken	string
 
 	repository *repositories.Repository
 	actionUser *models.User
@@ -53,6 +55,11 @@ VALUES (5, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a
 	suite.repository = repositories.NewRepository(suite.DB)
 	suite.actionUser = suite.repository.FindUserById(5)
 	assert.NotNil(suite.T(), suite.actionUser)
+
+	token, err := services.GenerateNewJwtToken(suite.actionUser, services.TokenTypeAccess)
+	assert.Nil(suite.T(), err, "Could not generate new token for create item test.")
+	assert.NotEqual(suite.T(), "", token)
+	suite.loggedInToken = token
 }
 
 func (suite *ItemTestSuite) TearDownTest() {
