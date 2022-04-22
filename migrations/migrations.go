@@ -43,14 +43,18 @@ END
 		&models.User{},
 		&models.Item{},
 		&models.Bid{},
-		&models.Reaction{}); err != nil {
+		&models.Reaction{},
+		&models.ItemComment{},
+		); err != nil {
 		log.Fatalln(fmt.Sprintf("could not drop tables due to:"), err)
 	}
 	if err := db.Migrator().CreateTable(
 		&models.User{},
 		&models.Item{},
 		&models.Bid{},
-		&models.Reaction{}); err != nil {
+		&models.Reaction{},
+		&models.ItemComment{},
+		); err != nil {
 		log.Fatalln(fmt.Sprintf("could not create tables due to:"), err)
 	}
 	db.Exec("SET foreign_key_checks = 1;")
@@ -59,7 +63,7 @@ END
 }
 
 func ForceTruncateAllTables(db *gorm.DB) {
-	for retry := 1; retry <= 5; retry++ {
+	for retry := 1; retry <= 3; retry++ {
 		txErr := db.Transaction(func(tx *gorm.DB) error {
 			if err := db.Exec(`SET foreign_key_checks = 0;`).Error; err != nil {
 				return err
@@ -74,6 +78,9 @@ func ForceTruncateAllTables(db *gorm.DB) {
 				return err
 			}
 			if err := db.Exec(`TRUNCATE TABLE reactions;`).Error; err != nil {
+				return err
+			}
+			if err := db.Exec(`TRUNCATE TABLE item_comments;`).Error; err != nil {
 				return err
 			}
 			if err := db.Exec(`SET foreign_key_checks = 1;`).Error; err != nil {
