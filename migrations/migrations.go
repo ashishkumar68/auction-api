@@ -45,7 +45,7 @@ END
 		&models.Bid{},
 		&models.Reaction{},
 		&models.ItemComment{},
-		); err != nil {
+	); err != nil {
 		log.Fatalln(fmt.Sprintf("could not drop tables due to:"), err)
 	}
 	if err := db.Migrator().CreateTable(
@@ -54,7 +54,7 @@ END
 		&models.Bid{},
 		&models.Reaction{},
 		&models.ItemComment{},
-		); err != nil {
+	); err != nil {
 		log.Fatalln(fmt.Sprintf("could not create tables due to:"), err)
 	}
 	db.Exec("SET foreign_key_checks = 1;")

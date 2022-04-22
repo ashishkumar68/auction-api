@@ -13,6 +13,6 @@ func NewRemoveItemReactionForm(actionUser *models.User, item *models.Item) *Remo
 		AuditableForm: AuditableForm{
 			ActionUser: actionUser,
 		},
-		Item:          item,
+		Item: item,
 	}
 }

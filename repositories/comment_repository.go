@@ -25,7 +25,7 @@ func (repo *Repository) FindItemCommentByUuid(uuid string) *models.ItemComment {
 	return &itemComment
 }
 
-func (repo *Repository)	SaveItemComment(comment *models.ItemComment) error {
+func (repo *Repository) SaveItemComment(comment *models.ItemComment) error {
 	result := repo.connection.Create(comment)
 	if result.Error != nil {
 		log.Println("could not save new item comment due to error:", result.Error)
@@ -35,10 +35,20 @@ func (repo *Repository)	SaveItemComment(comment *models.ItemComment) error {
 	return nil
 }
 
-func (repo *Repository)	UpdateItemComment(comment *models.ItemComment) error {
+func (repo *Repository) UpdateItemComment(comment *models.ItemComment) error {
 	result := repo.connection.Save(comment)
 	if result.Error != nil {
-		log.Println("could not update new item comment due to error:", result.Error)
+		log.Println("could not update item comment due to error:", result.Error)
+		return result.Error
+	}
+
+	return nil
+}
+
+func (repo *Repository) DeleteItemComment(comment *models.ItemComment) error {
+	result := repo.connection.Delete(comment)
+	if result.Error != nil {
+		log.Println("could not delete item comment due to error:", result.Error)
 		return result.Error
 	}
 

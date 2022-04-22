@@ -99,7 +99,6 @@ INSERT INTO reactions (uuid,created_at,updated_at,deleted_at,version,created_by,
 	assert.Equal(suite.T(), uint8(models.ReactionTypeDislike), newR.Type)
 }
 
-
 func (suite *ItemTestSuite) TestRemoveReactionFromItem() {
 	baseItemsRoute := fmt.Sprintf("%s://%s:%s%s/items", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
 	suite.DB.Exec(`

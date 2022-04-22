@@ -24,7 +24,7 @@ type ItemTestSuite struct {
 	indexRoute      string
 	apiBaseRoute    string
 	contentTypeJson string
-	loggedInToken	string
+	loggedInToken   string
 
 	repository *repositories.Repository
 	actionUser *models.User

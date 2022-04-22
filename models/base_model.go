@@ -77,6 +77,10 @@ func (base BaseModel) IsDeleted() bool {
 	return base.DeletedAt != nil
 }
 
+func (base BaseModel) IsSameAs(model BaseModel) bool {
+	return base.ID == model.ID && base.Uuid == model.Uuid
+}
+
 type ActionedMetaInfo struct {
 	ActionedAt time.Time `gorm:"name:actioned_at;type:datetime" json:"actionedAt,omitempty"`
 	CycledAt   time.Time `gorm:"name:cycled_at;type:datetime" json:"cycledAt,omitempty"`
