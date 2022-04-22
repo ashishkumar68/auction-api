@@ -6,7 +6,6 @@ import (
 	"github.com/ashishkumar68/auction-api/forms"
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/repositories"
-	"gorm.io/gorm"
 	"log"
 )
 
@@ -63,6 +62,6 @@ func (service *ReactionServiceImplementor) RemoveReactionFromItem(
 	return nil
 }
 
-func InitReactionService(db *gorm.DB) ReactionService {
-	return &ReactionServiceImplementor{repository: repositories.NewRepository(db)}
+func initReactionService(repository *repositories.Repository) ReactionService {
+	return &ReactionServiceImplementor{repository: repository}
 }

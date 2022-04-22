@@ -6,7 +6,6 @@ import (
 	"github.com/ashishkumar68/auction-api/forms"
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/repositories"
-	"gorm.io/gorm"
 	"log"
 )
 
@@ -85,9 +84,9 @@ func (service *ItemServiceImplementor) PlaceItemBid(
 	return placedBid, nil
 }
 
-func initItemService(conn *gorm.DB) ItemService {
+func initItemService(repository *repositories.Repository) ItemService {
 	itemService := &ItemServiceImplementor{
-		repository: repositories.NewRepository(conn),
+		repository: repository,
 	}
 
 	return itemService

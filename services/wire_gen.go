@@ -7,22 +7,32 @@
 package services
 
 import (
+	"github.com/ashishkumar68/auction-api/repositories"
 	"gorm.io/gorm"
 )
 
 // Injectors from di_container.go:
 
 func NewUserService(conn *gorm.DB) UserService {
-	userService := initUserService(conn)
+	repository := repositories.NewRepository(conn)
+	userService := initUserService(repository)
 	return userService
 }
 
 func NewItemService(conn *gorm.DB) ItemService {
-	itemService := initItemService(conn)
+	repository := repositories.NewRepository(conn)
+	itemService := initItemService(repository)
 	return itemService
 }
 
 func NewReactionService(conn *gorm.DB) ReactionService {
-	reactionService := InitReactionService(conn)
+	repository := repositories.NewRepository(conn)
+	reactionService := initReactionService(repository)
 	return reactionService
+}
+
+func NewItemCommentService(conn *gorm.DB) ItemCommentService {
+	repository := repositories.NewRepository(conn)
+	itemCommentService := initItemCommentService(repository)
+	return itemCommentService
 }

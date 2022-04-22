@@ -6,7 +6,6 @@ import (
 	"github.com/ashishkumar68/auction-api/forms"
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/repositories"
-	"gorm.io/gorm"
 	"log"
 )
 
@@ -19,9 +18,9 @@ type UserServiceImplementor struct {
 	repository *repositories.Repository
 }
 
-func initUserService(db *gorm.DB) UserService {
+func initUserService(repository *repositories.Repository) UserService {
 	return &UserServiceImplementor{
-		repository: repositories.NewRepository(db),
+		repository: repository,
 	}
 }
 
