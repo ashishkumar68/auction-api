@@ -33,7 +33,7 @@ func (suite *ItemTestSuite) TestDontAllowAddItemAsAnonymousUser() {
 	resp, err := http.Post(itemsRoute, suite.contentTypeJson, bytes.NewReader([]byte(payload)))
 	assert.Nil(suite.T(), err, "Could not detect service available.")
 	assert.NotNil(suite.T(), resp, "Could not detect service available.")
-	resp.Body.Close()
+	defer resp.Body.Close()
 	assert.Equal(suite.T(), http.StatusUnauthorized, resp.StatusCode)
 }
 

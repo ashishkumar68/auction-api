@@ -2,6 +2,7 @@ package item
 
 import (
 	"context"
+	"fmt"
 	"github.com/ashishkumar68/auction-api/config"
 	"github.com/ashishkumar68/auction-api/database"
 	"github.com/ashishkumar68/auction-api/migrations"
@@ -23,6 +24,7 @@ type ItemTestSuite struct {
 	port            string
 	indexRoute      string
 	apiBaseRoute    string
+	itemsRoute      string
 	contentTypeJson string
 	loggedInToken   string
 
@@ -41,6 +43,7 @@ func (suite *ItemTestSuite) SetupSuite() {
 	suite.indexRoute = "/"
 	suite.apiBaseRoute = "/api"
 	suite.contentTypeJson = "application/json"
+	suite.itemsRoute = fmt.Sprintf("%s://%s:%s%s/items", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
 }
 
 // SetupTest runs before each test.

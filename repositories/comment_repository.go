@@ -54,3 +54,14 @@ func (repo *Repository) DeleteItemComment(comment *models.ItemComment) error {
 
 	return nil
 }
+
+func (repo *Repository) CountCommentsByItem(item *models.Item) uint {
+	var count uint
+	repo.connection.
+		Table("item_comments").
+		Select("count(*)").
+		Where("item_comments.item_id = ? AND deleted_at IS NULL", item.ID).
+		Scan(&count)
+
+	return count
+}
