@@ -8,10 +8,12 @@ import (
 )
 
 var (
-	InternalServerErrMsg     = "Something went wrong, sorry please try again later."
-	AccountWithEmailExists   = "Sorry! a user with this email already exists"
-	InvalidCredentials       = "Invalid credentials were found."
-	InvalidItemIdReceivedErr = "Invalid item id was received in request."
+	InternalServerErrMsg        = "Something went wrong, sorry please try again later."
+	AccountWithEmailExists      = "Sorry! a user with this email already exists"
+	InvalidCredentials          = "Invalid credentials were found."
+	InvalidItemIdReceivedErr    = "Invalid item id was received in request."
+	InvalidCommentIdReceivedErr = "Invalid comment id was received in request."
+	CommentNotAuthoredByUser    = "Comment not authored by user."
 )
 
 func IndexAction(c *gin.Context) {
