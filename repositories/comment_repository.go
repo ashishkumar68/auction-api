@@ -7,7 +7,10 @@ import (
 
 func (repo *Repository) FindItemCommentById(id uint) *models.ItemComment {
 	var itemComment models.ItemComment
-	repo.connection.Find(&itemComment, id)
+	repo.connection.
+		Joins("UserCreated").
+		Find(&itemComment, id)
+
 	if itemComment.IsZero() {
 		return nil
 	}
@@ -17,7 +20,10 @@ func (repo *Repository) FindItemCommentById(id uint) *models.ItemComment {
 
 func (repo *Repository) FindItemCommentByUuid(uuid string) *models.ItemComment {
 	var itemComment models.ItemComment
-	repo.connection.Find(&itemComment, "uuid = ?", uuid)
+	repo.connection.
+		Joins("UserCreated").
+		Find(&itemComment, "uuid = ?", uuid)
+
 	if itemComment.IsZero() {
 		return nil
 	}
