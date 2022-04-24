@@ -79,7 +79,7 @@ func UpdateItemComment(c *gin.Context) {
 	}
 	if !comment.UserCreated.IsSameAs(updateItemComment.ActionUser.BaseModel) {
 		log.Println(fmt.Sprintf("Could not update item comment: %s", err))
-		c.JSON(http.StatusUnauthorized, gin.H{"error": actions.CommentNotAuthoredByUser})
+		c.JSON(http.StatusForbidden, gin.H{"error": actions.CommentNotAuthoredByUser})
 		return
 	}
 	if err = c.ShouldBindJSON(&updateItemComment); err != nil {
@@ -130,7 +130,7 @@ func DeleteItemComment(c *gin.Context) {
 	}
 	if !comment.UserCreated.IsSameAs(deleteItemComment.ActionUser.BaseModel) {
 		log.Println(fmt.Sprintf("Could not delete item comment: %s", err))
-		c.JSON(http.StatusUnauthorized, gin.H{"error": actions.CommentNotAuthoredByUser})
+		c.JSON(http.StatusForbidden, gin.H{"error": actions.CommentNotAuthoredByUser})
 		return
 	}
 
