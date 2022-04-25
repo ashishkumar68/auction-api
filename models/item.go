@@ -14,7 +14,8 @@ const (
 )
 
 var (
-	EmptyItemBidUserError = fmt.Errorf("placing item bid requires a user but was found empty")
+	EmptyItemBidUserError   = fmt.Errorf("placing item bid requires a user but was found empty")
+	DetectedPastLastBidDate = fmt.Errorf("can not set last bid date in the past")
 )
 
 type Value float32
@@ -28,7 +29,8 @@ type Item struct {
 	Category    ItemCategory `gorm:"type:smallint" json:"category"`
 	BrandName   string       `gorm:"type:varchar(1024)" json:"brandName"`
 	MarketValue Value        `gorm:"type:float(16,4)" json:"marketValue"`
-	LastBidDate time.Time    `gorm:"name:last_bid_date;type:date;not null" json:"lastBidDate"`
+	LastBidDate time.Time    `gorm:"column:last_bid_date;type:date;not null" json:"lastBidDate"`
+	OffBid      bool         `gorm:"column:off_bid;type:tinyint(1);not null;default:0" json:"isOffBid"`
 
 	Bids []Bid
 }
@@ -54,6 +56,51 @@ func NewItemFromValues(
 		MarketValue: value,
 		LastBidDate: lastBidDate,
 	}
+}
+
+func (item *Item) UpdateFromValues(
+	name string,
+	description string,
+	category ItemCategory,
+	brandName string,
+	value Value,
+	lastBidDate time.Time,
+	actionUser *User,
+) error {
+	if name != "" && name != item.Name {
+		item.Name = name
+	}
+	if description != "" && description != item.Description {
+		item.Description = description
+	}
+	item.Category = category
+	if brandName != "" && brandName != item.BrandName {
+		item.BrandName = brandName
+	}
+	if value != 0 && value != item.MarketValue {
+		item.MarketValue = value
+	}
+	if !lastBidDate.IsZero() && !lastBidDate.Equal(item.LastBidDate) {
+		if lastBidDate.Before(time.Now()) {
+			return DetectedPastLastBidDate
+		}
+		item.LastBidDate = lastBidDate
+	}
+	item.UserUpdatedBy = actionUser.ID
+
+	return nil
+}
+
+func (item Item) IsOffBid() bool {
+	return item.OffBid
+}
+
+func (item *Item) MarkOffBid() error {
+	if !item.IsOffBid() {
+		item.OffBid = true
+	}
+
+	return nil
 }
 
 func (item Item) IsBidEligible() bool {

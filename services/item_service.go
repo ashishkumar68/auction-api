@@ -10,13 +10,16 @@ import (
 )
 
 var (
-	BidItemNotFoundError = fmt.Errorf("bid item was not found")
-	BidUserNotFoundError = fmt.Errorf("bid user details was not found")
-	ItemNotBidEligible   = fmt.Errorf("this item is not eligible for bidding")
+	BidItemNotFoundError     = fmt.Errorf("bid item was not found")
+	BidUserNotFoundError     = fmt.Errorf("bid user details was not found")
+	ItemNotBidEligible       = fmt.Errorf("this item is not eligible for bidding")
+	ItemNotOwnedByActionUser = fmt.Errorf("item is not owned by action user")
 )
 
 type ItemService interface {
 	AddNew(ctx context.Context, form forms.AddNewItemForm) (*models.Item, error)
+	EditItem(ctx context.Context, form forms.EditItemForm) error
+	MarkItemOffBid(ctx context.Context, form forms.MarkItemOffBidForm) error
 	PlaceItemBid(ctx context.Context, form forms.PlaceNewItemBidForm) (*models.Bid, error)
 }
 
@@ -82,6 +85,47 @@ func (service *ItemServiceImplementor) PlaceItemBid(
 	}
 
 	return placedBid, nil
+}
+
+func (service *ItemServiceImplementor) EditItem(_ context.Context, form forms.EditItemForm) error {
+	if !form.Item.UserCreated.IsSameAs(form.ActionUser.BaseModel) {
+		return ItemNotOwnedByActionUser
+	}
+	item := form.Item
+	err := item.UpdateFromValues(
+		form.Name,
+		form.Description,
+		form.Category,
+		form.BrandName,
+		form.MarketValue,
+		form.LastBidDate,
+		form.ActionUser,
+	)
+	if err != nil {
+		log.Println("could not edit item due to error:", err)
+		return err
+	}
+	err = service.repository.UpdateItem(item)
+	if err != nil {
+		log.Println("could not edit item due to error:", err)
+		return err
+	}
+
+	return nil
+}
+
+func (service *ItemServiceImplementor) MarkItemOffBid(_ context.Context, form forms.MarkItemOffBidForm) error {
+	if !form.Item.UserCreated.IsSameAs(form.ActionUser.BaseModel) {
+		return ItemNotOwnedByActionUser
+	}
+	item := form.Item
+	err := item.MarkOffBid()
+	if err != nil {
+		log.Println("could not put item off bid due to error:", err)
+		return err
+	}
+
+	return nil
 }
 
 func initItemService(repository *repositories.Repository) ItemService {
