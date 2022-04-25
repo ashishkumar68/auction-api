@@ -9,7 +9,10 @@ import (
 
 func (repo *Repository) FindItemById(id uint) *models.Item {
 	var item models.Item
-	repo.connection.Find(&item, id)
+	repo.connection.
+		Joins("UserCreated").
+		Joins("UserUpdated").
+		Find(&item, id)
 	if item.IsZero() {
 		return nil
 	}

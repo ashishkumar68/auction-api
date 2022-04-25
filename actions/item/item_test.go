@@ -194,3 +194,55 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 	assert.False(suite.T(), newBid.IsZero())
 	assert.Equal(suite.T(), newBid.Value, models.Value(12))
 }
+
+func (suite *ItemTestSuite) TestAllowEditItemByAuthor() {
+	suite.DB.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01");
+`)
+	item := suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+	assert.True(suite.T(), item.UserCreated.IsSameAs(suite.actionUser.BaseModel))
+	assert.True(suite.T(), item.UserUpdated.IsSameAs(suite.actionUser.BaseModel))
+	assert.Equal(suite.T(), "ABC Item 1", item.Name)
+	assert.Equal(suite.T(), "Item 1 Description", item.Description)
+	assert.Equal(suite.T(), "ABC", item.BrandName)
+	assert.Equal(suite.T(), models.ItemCategory(models.CategoryAppliancesInt), item.Category)
+	assert.Equal(suite.T(), models.Value(20000), item.MarketValue)
+	assert.True(suite.T(), item.LastBidDate.Equal(time.Date(2099, time.January, 1, 0, 0, 0, 0, time.UTC)))
+
+	editItemPayload := `
+{
+	"name": "ABC Washing Machine UPDATED",
+    "description": "A washing machine UPDATED",
+    "category": 0,
+    "brandName": "ABC UPDATED",
+    "marketValue": 25000,
+	"lastBidDate": "2025-10-02T00:00:00Z"
+}
+`
+	itemId := uint(1)
+	resp, err := client.MakeRequest(
+		fmt.Sprintf("%s://%s:%s%s/items/%d", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, itemId),
+		"PATCH",
+		map[string]string{},
+		map[string]string{"Authorization": suite.loggedInToken},
+		time.Second*10,
+		[]byte(editItemPayload),
+	)
+	defer resp.Body.Close()
+	assert.Nil(suite.T(), err, "Could not detect service available.")
+	assert.Equal(suite.T(), http.StatusNoContent, resp.StatusCode)
+
+	item = suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+	assert.True(suite.T(), item.UserCreated.IsSameAs(suite.actionUser.BaseModel))
+	assert.True(suite.T(), item.UserUpdated.IsSameAs(suite.actionUser.BaseModel))
+	assert.Equal(suite.T(), "ABC Washing Machine UPDATED", item.Name)
+	assert.Equal(suite.T(), "A washing machine UPDATED", item.Description)
+	assert.Equal(suite.T(), "ABC UPDATED", item.BrandName)
+	assert.Equal(suite.T(), models.ItemCategory(models.CategoryElectronicsInt), item.Category)
+	assert.Equal(suite.T(), models.Value(25000), item.MarketValue)
+	assert.True(suite.T(), item.LastBidDate.Equal(time.Date(2025, time.October, 2, 0, 0, 0, 0, time.UTC)))
+}
