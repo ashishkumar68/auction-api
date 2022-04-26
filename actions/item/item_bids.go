@@ -33,7 +33,13 @@ func PlaceBidOnItem(c *gin.Context) {
 	bid, err := itemService.PlaceItemBid(c, placeBidForm)
 	if err != nil {
 		log.Println(fmt.Sprintf("Could not save bid: %s", err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": actions.InternalServerErrMsg})
+		if err == services.ItemNotBidEligible {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else if err == services.BidsNotAllowedByOwner {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": actions.InternalServerErrMsg})
+		}
 		return
 	}
 

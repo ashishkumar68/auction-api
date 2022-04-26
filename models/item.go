@@ -103,8 +103,15 @@ func (item *Item) MarkOffBid() error {
 	return nil
 }
 
+func (item Item) IsOwner(user User) bool {
+	return item.UserCreated.IsSameAs(user.BaseModel)
+}
+
 func (item Item) IsBidEligible() bool {
 
+	if item.IsOffBid() {
+		return false
+	}
 	if time.Now().Before(item.LastBidDate) {
 		return true
 	}

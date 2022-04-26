@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/ashishkumar68/auction-api/client"
 	"github.com/ashishkumar68/auction-api/models"
+	"github.com/ashishkumar68/auction-api/response"
 	"github.com/ashishkumar68/auction-api/services"
 	"github.com/morkid/paginate"
 	"github.com/stretchr/testify/assert"
@@ -160,19 +161,25 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 
 func (suite *ItemTestSuite) TestAllowItemBidsAsLoggedInUser() {
 	suite.DB.Exec(`
+INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
+VALUES (6, uuid_v4(), NOW(), NOW(), "John", "Doe", "johndoe25@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
+`)
+	suite.DB.Exec(`
 INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
 (1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
 (2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01");
 `)
 	items := suite.repository.FindItemByName("ABC Item")
 	assert.Len(suite.T(), items, 2)
+	bidUser := suite.repository.FindUserById(6)
+	assert.NotNil(suite.T(), bidUser)
 
 	bidPayload := `
 {
 	"bidValue": 12
 }
 `
-	token, err := services.GenerateNewJwtToken(suite.actionUser, services.TokenTypeAccess)
+	token, err := services.GenerateNewJwtToken(bidUser, services.TokenTypeAccess)
 	assert.Nil(suite.T(), err, "Could not generate new token for create item test.")
 	itemId := uint(1)
 	resp, err := client.MakeRequest(
@@ -189,7 +196,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 	assert.Equal(suite.T(), http.StatusCreated, resp.StatusCode)
 
 	item := suite.repository.FindItemById(itemId)
-	newBid := suite.repository.FindBidByItem(item, suite.actionUser)
+	newBid := suite.repository.FindBidByItem(item, bidUser)
 	assert.NotNil(suite.T(), newBid)
 	assert.False(suite.T(), newBid.IsZero())
 	assert.Equal(suite.T(), newBid.Value, models.Value(12))
@@ -245,4 +252,88 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 	assert.Equal(suite.T(), models.ItemCategory(models.CategoryElectronicsInt), item.Category)
 	assert.Equal(suite.T(), models.Value(25000), item.MarketValue)
 	assert.True(suite.T(), item.LastBidDate.Equal(time.Date(2025, time.October, 2, 0, 0, 0, 0, time.UTC)))
+}
+
+func (suite *ItemTestSuite) TestDontAllowBidsForOffBidItem() {
+	suite.DB.Exec(`
+INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
+VALUES (6, uuid_v4(), NOW(), NOW(), "John", "Doe", "johndoe25@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
+`)
+	suite.DB.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01");
+`)
+	suite.DB.Exec(`
+UPDATE items SET off_bid = 1 WHERE id = 1;
+`)
+	item := suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+	assert.True(suite.T(), item.IsOffBid())
+	bidUser := suite.repository.FindUserById(6)
+	assert.NotNil(suite.T(), bidUser)
+
+	bidPayload := `
+{
+	"bidValue": 12
+}
+`
+	token, err := services.GenerateNewJwtToken(bidUser, services.TokenTypeAccess)
+	assert.Nil(suite.T(), err, "Could not generate new token for create item test.")
+	itemId := uint(1)
+	resp, err := client.MakeRequest(
+		fmt.Sprintf("%s://%s:%s%s/items/%d/bid", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, itemId),
+		"POST",
+		map[string]string{},
+		map[string]string{"Authorization": token},
+		time.Second*10,
+		[]byte(bidPayload),
+	)
+	defer resp.Body.Close()
+	assert.Nil(suite.T(), err, "Could not detect service available.")
+	assert.NotNil(suite.T(), resp, "Could not detect service available.")
+	assert.Equal(suite.T(), http.StatusBadRequest, resp.StatusCode)
+	respBytes, err := io.ReadAll(resp.Body)
+	assert.Nil(suite.T(), err)
+	var errResp response.HttpErrorResponse
+	err = json.Unmarshal(respBytes, &errResp)
+	assert.Nil(suite.T(), err)
+
+	assert.Equal(suite.T(), services.ItemNotBidEligible.Error(), errResp.Error)
+}
+
+func (suite *ItemTestSuite) TestDontAllowItemOwnerBids() {
+	suite.DB.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01");
+`)
+	item := suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+
+	bidPayload := `
+{
+	"bidValue": 12
+}
+`
+	itemId := uint(1)
+	resp, err := client.MakeRequest(
+		fmt.Sprintf("%s://%s:%s%s/items/%d/bid", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, itemId),
+		"POST",
+		map[string]string{},
+		map[string]string{"Authorization": suite.loggedInToken},
+		time.Second*10,
+		[]byte(bidPayload),
+	)
+	defer resp.Body.Close()
+	assert.Nil(suite.T(), err, "Could not detect service available.")
+	assert.NotNil(suite.T(), resp, "Could not detect service available.")
+	assert.Equal(suite.T(), http.StatusBadRequest, resp.StatusCode)
+	respBytes, err := io.ReadAll(resp.Body)
+	assert.Nil(suite.T(), err)
+	var errResp response.HttpErrorResponse
+	err = json.Unmarshal(respBytes, &errResp)
+	assert.Nil(suite.T(), err)
+
+	assert.Equal(suite.T(), services.BidsNotAllowedByOwner.Error(), errResp.Error)
 }

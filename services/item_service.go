@@ -14,6 +14,7 @@ var (
 	BidUserNotFoundError     = fmt.Errorf("bid user details was not found")
 	ItemNotBidEligible       = fmt.Errorf("this item is not eligible for bidding")
 	ItemNotOwnedByActionUser = fmt.Errorf("item is not owned by action user")
+	BidsNotAllowedByOwner    = fmt.Errorf("bids can not be created by item owners")
 )
 
 type ItemService interface {
@@ -58,6 +59,9 @@ func (service *ItemServiceImplementor) PlaceItemBid(
 	item := service.repository.FindItemById(form.ItemId)
 	if nil == item {
 		return nil, BidItemNotFoundError
+	}
+	if item.IsOwner(*bidUser) {
+		return nil, BidsNotAllowedByOwner
 	}
 	if !item.IsBidEligible() {
 		return nil, ItemNotBidEligible
