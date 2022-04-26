@@ -5,7 +5,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func MapAuthRoutes(authGroup *gin.RouterGroup) {
-	authGroup.POST("/register", user.RegisterUser)
-	authGroup.POST("/login", user.LoginUser)
+func MapUserRoutes(authGroup *gin.RouterGroup) {
+	authGroup.POST("/user/register", user.RegisterUser)
+	authGroup.POST("/user/login", user.LoginUser)
+
+	authGroup.GET("/user/items", user.ListUserItems)
 }

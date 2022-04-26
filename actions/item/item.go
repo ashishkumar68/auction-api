@@ -39,7 +39,6 @@ func ListItems(c *gin.Context) {
 	repository := repositories.NewRepository(db)
 
 	c.JSON(http.StatusOK, pg.With(repository.ListItems()).Request(c.Request).Response(&[]models.Item{}))
-	return
 }
 
 func EditItem(c *gin.Context) {

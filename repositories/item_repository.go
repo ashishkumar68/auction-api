@@ -65,3 +65,11 @@ func (repo *Repository) ListItems() *gorm.DB {
 		Joins("UserUpdated").
 		Model(&models.Item{})
 }
+
+func (repo *Repository) ListUserItems(user *models.User) *gorm.DB {
+	return repo.connection.
+		Model(&models.Item{}).
+		Joins("UserCreated").
+		Where("items.created_by = ?", user.ID).
+		Order("items.id DESC")
+}
