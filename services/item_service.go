@@ -92,7 +92,7 @@ func (service *ItemServiceImplementor) PlaceItemBid(
 }
 
 func (service *ItemServiceImplementor) EditItem(_ context.Context, form forms.EditItemForm) error {
-	if !form.Item.UserCreated.IsSameAs(form.ActionUser.BaseModel) {
+	if !form.Item.IsOwner(*form.ActionUser) {
 		return ItemNotOwnedByActionUser
 	}
 	item := form.Item
@@ -119,11 +119,16 @@ func (service *ItemServiceImplementor) EditItem(_ context.Context, form forms.Ed
 }
 
 func (service *ItemServiceImplementor) MarkItemOffBid(_ context.Context, form forms.MarkItemOffBidForm) error {
-	if !form.Item.UserCreated.IsSameAs(form.ActionUser.BaseModel) {
+	if !form.Item.IsOwner(*form.ActionUser) {
 		return ItemNotOwnedByActionUser
 	}
 	item := form.Item
 	err := item.MarkOffBid()
+	if err != nil {
+		log.Println("could not put item off bid due to error:", err)
+		return err
+	}
+	err = service.repository.UpdateItem(item)
 	if err != nil {
 		log.Println("could not put item off bid due to error:", err)
 		return err

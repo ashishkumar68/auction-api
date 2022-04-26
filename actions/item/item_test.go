@@ -41,7 +41,7 @@ func (suite *ItemTestSuite) TestDontAllowAddItemAsAnonymousUser() {
 func (suite *ItemTestSuite) TestAllowAddItemAsLoggedInUser() {
 	itemsRoute := fmt.Sprintf("%s://%s:%s%s/items", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
 	token, err := services.GenerateNewJwtToken(suite.actionUser, services.TokenTypeAccess)
-	assert.Nil(suite.T(), err, "Could not generate new token for create item test.")
+	assert.Nil(suite.T(), err)
 
 	payload := `
 {
@@ -132,7 +132,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 	assert.Len(suite.T(), items, 2)
 
 	token, err := services.GenerateNewJwtToken(suite.actionUser, services.TokenTypeAccess)
-	assert.Nil(suite.T(), err, "Could not generate new token for create item test.")
+	assert.Nil(suite.T(), err)
 	resp, err := client.MakeRequest(
 		itemsRoute,
 		"GET",
@@ -180,7 +180,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 }
 `
 	token, err := services.GenerateNewJwtToken(bidUser, services.TokenTypeAccess)
-	assert.Nil(suite.T(), err, "Could not generate new token for create item test.")
+	assert.Nil(suite.T(), err)
 	itemId := uint(1)
 	resp, err := client.MakeRequest(
 		fmt.Sprintf("%s://%s:%s%s/items/%d/bid", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, itemId),
@@ -210,8 +210,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 `)
 	item := suite.repository.FindItemById(1)
 	assert.NotNil(suite.T(), item)
-	assert.True(suite.T(), item.UserCreated.IsSameAs(suite.actionUser.BaseModel))
-	assert.True(suite.T(), item.UserUpdated.IsSameAs(suite.actionUser.BaseModel))
+	assert.True(suite.T(), item.IsOwner(*suite.actionUser))
 	assert.Equal(suite.T(), "ABC Item 1", item.Name)
 	assert.Equal(suite.T(), "Item 1 Description", item.Description)
 	assert.Equal(suite.T(), "ABC", item.BrandName)
@@ -279,7 +278,7 @@ UPDATE items SET off_bid = 1 WHERE id = 1;
 }
 `
 	token, err := services.GenerateNewJwtToken(bidUser, services.TokenTypeAccess)
-	assert.Nil(suite.T(), err, "Could not generate new token for create item test.")
+	assert.Nil(suite.T(), err)
 	itemId := uint(1)
 	resp, err := client.MakeRequest(
 		fmt.Sprintf("%s://%s:%s%s/items/%d/bid", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, itemId),
@@ -336,4 +335,73 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 	assert.Nil(suite.T(), err)
 
 	assert.Equal(suite.T(), services.BidsNotAllowedByOwner.Error(), errResp.Error)
+}
+
+func (suite *ItemTestSuite) TestAllowMarkItemOffBidByAuthor() {
+	suite.DB.Exec(`
+INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
+VALUES (6, uuid_v4(), NOW(), NOW(), "John", "Doe", "johndoe25@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
+`)
+	suite.DB.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01");
+`)
+	item := suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+	assert.False(suite.T(), item.IsOffBid())
+	assert.True(suite.T(), item.IsOwner(*suite.actionUser))
+
+	itemId := uint(1)
+	resp, err := client.MakeRequest(
+		fmt.Sprintf("%s://%s:%s%s/items/%d/mark-off-bid", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, itemId),
+		"PUT",
+		map[string]string{},
+		map[string]string{"Authorization": suite.loggedInToken},
+		time.Second*10,
+		nil,
+	)
+	defer resp.Body.Close()
+	assert.Nil(suite.T(), err, "Could not detect service available.")
+	assert.Equal(suite.T(), http.StatusNoContent, resp.StatusCode)
+
+	item = suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+	assert.True(suite.T(), item.IsOffBid())
+}
+
+func (suite *ItemTestSuite) TestDontAllowMarkItemOffBidByNonAuthor() {
+	suite.DB.Exec(`
+INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
+VALUES (6, uuid_v4(), NOW(), NOW(), "John", "Doe", "johndoe25@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
+`)
+	suite.DB.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01");
+`)
+	item := suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+	assert.False(suite.T(), item.IsOffBid())
+	actionUser := suite.repository.FindUserById(6)
+	assert.False(suite.T(), item.IsOwner(*actionUser))
+
+	token, err := services.GenerateNewJwtToken(actionUser, services.TokenTypeAccess)
+	assert.Nil(suite.T(), err)
+	itemId := uint(1)
+	resp, err := client.MakeRequest(
+		fmt.Sprintf("%s://%s:%s%s/items/%d/mark-off-bid", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, itemId),
+		"PUT",
+		map[string]string{},
+		map[string]string{"Authorization": token},
+		time.Second*10,
+		nil,
+	)
+	defer resp.Body.Close()
+	assert.Nil(suite.T(), err, "Could not detect service available.")
+	assert.Equal(suite.T(), http.StatusForbidden, resp.StatusCode)
+
+	item = suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+	assert.False(suite.T(), item.IsOffBid())
 }

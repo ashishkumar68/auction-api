@@ -27,7 +27,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 	assert.Nil(suite.T(), reaction)
 	addNewItemReactionRoute := fmt.Sprintf("%s/%d/reaction", baseItemsRoute, item.ID)
 	token, err := services.GenerateNewJwtToken(suite.actionUser, services.TokenTypeAccess)
-	assert.Nil(suite.T(), err, "Could not generate new token for create item test.")
+	assert.Nil(suite.T(), err)
 
 	payload := `{"reactionType": 0}`
 	resp, err := client.MakeRequest(
@@ -73,7 +73,7 @@ INSERT INTO reactions (uuid,created_at,updated_at,deleted_at,version,created_by,
 	addNewItemReactionRoute := fmt.Sprintf("%s/%d/reaction", baseItemsRoute, item.ID)
 
 	token, err := services.GenerateNewJwtToken(suite.actionUser, services.TokenTypeAccess)
-	assert.Nil(suite.T(), err, "Could not generate new token for create item test.")
+	assert.Nil(suite.T(), err)
 
 	payload := `{"reactionType": 1}`
 	resp, err := client.MakeRequest(

@@ -60,7 +60,7 @@ VALUES (5, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a
 	assert.NotNil(suite.T(), suite.actionUser)
 
 	token, err := services.GenerateNewJwtToken(suite.actionUser, services.TokenTypeAccess)
-	assert.Nil(suite.T(), err, "Could not generate new token for create item test.")
+	assert.Nil(suite.T(), err)
 	assert.NotEqual(suite.T(), "", token)
 	suite.loggedInToken = token
 }
