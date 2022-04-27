@@ -2,11 +2,13 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"github.com/ashishkumar68/auction-api/config"
 	"github.com/ashishkumar68/auction-api/database"
 	"github.com/ashishkumar68/auction-api/migrations"
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/repositories"
+	"github.com/ashishkumar68/auction-api/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
@@ -23,6 +25,8 @@ type UserTestSuite struct {
 	indexRoute      string
 	apiBaseRoute    string
 	contentTypeJson string
+	userRoute       string
+	loggedInToken   string
 
 	repository *repositories.Repository
 	actionUser *models.User
@@ -39,6 +43,7 @@ func (suite *UserTestSuite) SetupSuite() {
 	suite.indexRoute = "/"
 	suite.apiBaseRoute = "/api"
 	suite.contentTypeJson = "application/json"
+	suite.userRoute = fmt.Sprintf("%s://%s:%s%s/user", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
 }
 
 // SetupTest runs before each test.
@@ -53,6 +58,11 @@ VALUES (1, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith26@abc.com", "$2a
 	suite.repository = repositories.NewRepository(suite.DB)
 	suite.actionUser = suite.repository.FindUserById(1)
 	assert.NotNil(suite.T(), suite.actionUser)
+	// New token per test.
+	token, err := services.GenerateNewJwtToken(suite.actionUser, services.TokenTypeAccess)
+	assert.Nil(suite.T(), err)
+	assert.NotEqual(suite.T(), "", token)
+	suite.loggedInToken = token
 }
 
 func (suite *UserTestSuite) TearDownTest() {
