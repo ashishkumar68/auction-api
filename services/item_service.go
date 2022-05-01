@@ -6,6 +6,8 @@ import (
 	"github.com/ashishkumar68/auction-api/forms"
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/repositories"
+	"github.com/ashishkumar68/auction-api/utils"
+	"gorm.io/gorm"
 	"log"
 )
 
@@ -22,6 +24,7 @@ type ItemService interface {
 	EditItem(ctx context.Context, form forms.EditItemForm) error
 	MarkItemOffBid(ctx context.Context, form forms.MarkItemOffBidForm) error
 	PlaceItemBid(ctx context.Context, form forms.PlaceNewItemBidForm) (*models.Bid, error)
+	AddItemImages(_ context.Context, form forms.AddItemImagesForm) ([]*models.ItemImage, error)
 }
 
 type ItemServiceImplementor struct {
@@ -39,7 +42,7 @@ func (service *ItemServiceImplementor) AddNew(_ context.Context, form forms.AddN
 	)
 	newItem.UserCreatedBy = form.ActionUser.ID
 	newItem.UserUpdatedBy = form.ActionUser.ID
-	err := service.repository.SaveItem(newItem)
+	err := service.repository.Save(newItem)
 	if err != nil {
 		log.Println(fmt.Sprintf("could not create new item: %s", err))
 		return nil, err
@@ -135,6 +138,44 @@ func (service *ItemServiceImplementor) MarkItemOffBid(_ context.Context, form fo
 	}
 
 	return nil
+}
+
+func (service *ItemServiceImplementor) AddItemImages(
+	_ context.Context,
+	form forms.AddItemImagesForm) ([]*models.ItemImage, error) {
+	if !form.Item.IsOwner(*form.ActionUser) {
+		return nil, ItemNotOwnedByActionUser
+	}
+	item := form.Item
+	itemImages := make([]*models.ItemImage, 0)
+	for _, file := range form.ImageFiles {
+		newItemImage, err := models.NewItemImageFromMultipartFile(item, file, form.ActionUser)
+		if err != nil {
+			log.Println(fmt.Sprintf("could not build a new item image due to error: %s", err.Error()))
+			return nil, err
+		}
+		itemImages = append(itemImages, newItemImage)
+	}
+
+	err := service.repository.Transaction(func(trx *gorm.DB) error {
+		for _, image := range itemImages {
+			saveErr := service.repository.Save(image)
+			if saveErr != nil {
+				log.Println(fmt.Sprintf("found error: %s while saving item image to database", saveErr))
+				return saveErr
+			}
+		}
+		return nil
+	})
+	for _, itemImg := range itemImages {
+		err = utils.SaveUploadedFile(itemImg.MultiPartImgFile, utils.GetFileSystemFilePath(itemImg.Path))
+		if err != nil {
+			log.Println(fmt.Sprintf("found error: %s while saving item image to file system", err.Error()))
+			return nil, err
+		}
+	}
+
+	return itemImages, err
 }
 
 func initItemService(repository *repositories.Repository) ItemService {

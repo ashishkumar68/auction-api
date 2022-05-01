@@ -6,6 +6,7 @@ import (
 	"github.com/ashishkumar68/auction-api/middleware"
 	"github.com/ashishkumar68/auction-api/migrations"
 	"github.com/ashishkumar68/auction-api/routes"
+	"github.com/ashishkumar68/auction-api/validators"
 	"github.com/gin-gonic/gin"
 	"log"
 	"os"
@@ -32,6 +33,8 @@ func main() {
 	runMigrations()
 	// setting up routes.
 	SetupRoutes(engine)
+	// setting up custom validators.
+	validators.SetupCustomValidators()
 
 	// launch server.
 	port := os.Getenv("PORT")
