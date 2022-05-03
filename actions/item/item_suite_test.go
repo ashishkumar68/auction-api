@@ -18,15 +18,19 @@ import (
 
 type ItemTestSuite struct {
 	suite.Suite
-	DB              *gorm.DB
-	protocol        string
-	host            string
-	port            string
-	indexRoute      string
-	apiBaseRoute    string
-	itemsRoute      string
-	contentTypeJson string
-	loggedInToken   string
+	DB                   *gorm.DB
+	protocol             string
+	host                 string
+	port                 string
+	indexRoute           string
+	apiBaseRoute         string
+	itemsRoute           string
+	contentTypeJson      string
+	contentTypeMultipart string
+	loggedInToken        string
+	baseFSItemsPath      string
+	itemImageFile1       *os.File
+	itemImageFile2       *os.File
 
 	repository *repositories.Repository
 	actionUser *models.User
@@ -43,7 +47,16 @@ func (suite *ItemTestSuite) SetupSuite() {
 	suite.indexRoute = "/"
 	suite.apiBaseRoute = "/api"
 	suite.contentTypeJson = "application/json"
+	suite.contentTypeMultipart = "multipart/form-data"
+	suite.baseFSItemsPath = fmt.Sprintf("%s/%s", os.Getenv("FILE_UPLOADS_DIR"), models.BaseFSItemsPrefix)
 	suite.itemsRoute = fmt.Sprintf("%s://%s:%s%s/items", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
+
+	itemImageFile1, err := os.Open(fmt.Sprintf("%s/actions/item/fixtures/guitar_1.jpeg", os.Getenv("PROJECTDIR")))
+	assert.Nilf(suite.T(), err, "could not load test file")
+	suite.itemImageFile1 = itemImageFile1
+	itemImageFile2, err := os.Open(fmt.Sprintf("%s/actions/item/fixtures/guitar_2.jpg", os.Getenv("PROJECTDIR")))
+	assert.Nilf(suite.T(), err, "could not load test file")
+	suite.itemImageFile2 = itemImageFile2
 }
 
 // SetupTest runs before each test.
@@ -63,6 +76,9 @@ VALUES (5, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a
 	assert.Nil(suite.T(), err)
 	assert.NotEqual(suite.T(), "", token)
 	suite.loggedInToken = token
+	// clean up items file system.
+	err = os.RemoveAll(suite.baseFSItemsPath)
+	assert.Nil(suite.T(), err, fmt.Sprintf("could not clear items base path: %s", suite.baseFSItemsPath))
 }
 
 func (suite *ItemTestSuite) TearDownTest() {

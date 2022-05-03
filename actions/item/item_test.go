@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -59,7 +60,7 @@ func (suite *ItemTestSuite) TestAllowAddItemAsLoggedInUser() {
 		map[string]string{},
 		map[string]string{"Authorization": token},
 		time.Second*10,
-		[]byte(payload),
+		bytes.NewReader([]byte(payload)),
 	)
 	defer resp.Body.Close()
 
@@ -188,7 +189,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 		map[string]string{},
 		map[string]string{"Authorization": token},
 		time.Second*10,
-		[]byte(bidPayload),
+		bytes.NewReader([]byte(bidPayload)),
 	)
 	defer resp.Body.Close()
 	assert.Nil(suite.T(), err, "Could not detect service available.")
@@ -235,7 +236,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 		map[string]string{},
 		map[string]string{"Authorization": suite.loggedInToken},
 		time.Second*10,
-		[]byte(editItemPayload),
+		bytes.NewReader([]byte(editItemPayload)),
 	)
 	defer resp.Body.Close()
 	assert.Nil(suite.T(), err, "Could not detect service available.")
@@ -286,7 +287,7 @@ UPDATE items SET off_bid = 1 WHERE id = 1;
 		map[string]string{},
 		map[string]string{"Authorization": token},
 		time.Second*10,
-		[]byte(bidPayload),
+		bytes.NewReader([]byte(bidPayload)),
 	)
 	defer resp.Body.Close()
 	assert.Nil(suite.T(), err, "Could not detect service available.")
@@ -322,7 +323,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 		map[string]string{},
 		map[string]string{"Authorization": suite.loggedInToken},
 		time.Second*10,
-		[]byte(bidPayload),
+		bytes.NewReader([]byte(bidPayload)),
 	)
 	defer resp.Body.Close()
 	assert.Nil(suite.T(), err, "Could not detect service available.")
@@ -404,4 +405,48 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 	item = suite.repository.FindItemById(1)
 	assert.NotNil(suite.T(), item)
 	assert.False(suite.T(), item.IsOffBid())
+}
+
+func (suite *ItemTestSuite) TestAddItemImagesByAuthor() {
+	suite.DB.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01");
+`)
+	item := suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+
+	assert.False(suite.T(), item.IsOffBid())
+	assert.True(suite.T(), item.IsOwner(*suite.actionUser))
+
+	payload, contentType, err := client.MakeMultiPartWriterFromFiles(
+		[]*os.File{suite.itemImageFile1, suite.itemImageFile2}, "images",
+	)
+	assert.Nil(suite.T(), err)
+
+	resp, err := client.MakeRequest(
+		fmt.Sprintf("%s://%s:%s%s/items/%d/images", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, item.ID),
+		"POST",
+		map[string]string{},
+		map[string]string{"Authorization": suite.loggedInToken, "Content-Type": contentType},
+		time.Second*10,
+		payload,
+	)
+	defer resp.Body.Close()
+	var itemImages []models.ItemImage
+
+	respBytes, err := io.ReadAll(resp.Body)
+	assert.Nil(suite.T(), err)
+	err = json.Unmarshal(respBytes, &itemImages)
+	assert.Nil(suite.T(), err)
+
+	assert.Equal(suite.T(), http.StatusCreated, resp.StatusCode)
+	assert.Len(suite.T(), itemImages, 2)
+	assert.NotNil(suite.T(), itemImages[0].ID)
+	assert.NotEqual(suite.T(), "", itemImages[0].Name)
+
+	itemImages = suite.repository.FindItemImages(item)
+	assert.Len(suite.T(), itemImages, 2)
+	assert.NotNil(suite.T(), itemImages[0].ID)
+	assert.NotEqual(suite.T(), "", itemImages[0].Name)
 }

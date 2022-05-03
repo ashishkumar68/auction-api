@@ -24,7 +24,7 @@ type ItemService interface {
 	EditItem(ctx context.Context, form forms.EditItemForm) error
 	MarkItemOffBid(ctx context.Context, form forms.MarkItemOffBidForm) error
 	PlaceItemBid(ctx context.Context, form forms.PlaceNewItemBidForm) (*models.Bid, error)
-	AddItemImages(_ context.Context, form forms.AddItemImagesForm) ([]*models.ItemImage, error)
+	AddItemImages(ctx context.Context, form forms.AddItemImagesForm) ([]*models.ItemImage, error)
 }
 
 type ItemServiceImplementor struct {
@@ -167,6 +167,9 @@ func (service *ItemServiceImplementor) AddItemImages(
 		}
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 	for _, itemImg := range itemImages {
 		err = utils.SaveUploadedFile(itemImg.MultiPartImgFile, utils.GetFileSystemFilePath(itemImg.Path))
 		if err != nil {
@@ -175,7 +178,7 @@ func (service *ItemServiceImplementor) AddItemImages(
 		}
 	}
 
-	return itemImages, err
+	return itemImages, nil
 }
 
 func initItemService(repository *repositories.Repository) ItemService {

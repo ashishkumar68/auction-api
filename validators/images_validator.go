@@ -6,10 +6,14 @@ import (
 	"math"
 	"mime/multipart"
 	"strconv"
+	"strings"
 )
 
 var allowedImageMimeTypes = []string{
 	"image/jpeg", "image/png",
+}
+var allowedExtensions = []string{
+	"jpeg", "jpg", "png",
 }
 
 var ImageFiles validator.Func = func(fl validator.FieldLevel) bool {
@@ -18,18 +22,34 @@ var ImageFiles validator.Func = func(fl validator.FieldLevel) bool {
 		return false
 	}
 
+	validFilesCount := 0
+IterateFiles:
 	for _, file := range files {
 		contentType := file.Header.Get("Content-Type")
+		fileNameInfo := strings.Split(file.Filename, ".")
+		if len(fileNameInfo) < 2 {
+			continue
+		}
+		extension := fileNameInfo[len(fileNameInfo)-1]
 		for _, allowedType := range allowedImageMimeTypes {
 			if allowedType == contentType {
-				return true
+				validFilesCount += 1
+				continue IterateFiles
 			}
 		}
-
-		return false
+		for _, ext := range allowedExtensions {
+			if ext == extension {
+				validFilesCount += 1
+				continue IterateFiles
+			}
+		}
 	}
 
-	return true
+	if validFilesCount == len(files) {
+		return true
+	} else {
+		return false
+	}
 }
 
 var MaxUploadImageFileSize validator.Func = func(fl validator.FieldLevel) bool {

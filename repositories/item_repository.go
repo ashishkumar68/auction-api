@@ -73,3 +73,12 @@ func (repo *Repository) ListUserItems(user *models.User) *gorm.DB {
 		Where("items.created_by = ?", user.ID).
 		Order("items.id DESC")
 }
+
+func (repo *Repository) FindItemImages(item *models.Item) []models.ItemImage {
+	var itemImages []models.ItemImage
+	repo.connection.
+		Model(&models.ItemImage{}).
+		Where("item_id = ?", item.ID).Find(&itemImages)
+
+	return itemImages
+}

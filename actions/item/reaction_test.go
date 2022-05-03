@@ -1,6 +1,7 @@
 package item
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/ashishkumar68/auction-api/client"
@@ -36,7 +37,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 		map[string]string{},
 		map[string]string{"Authorization": token, "Content-Type": suite.contentTypeJson},
 		time.Second*10,
-		[]byte(payload),
+		bytes.NewReader([]byte(payload)),
 	)
 	defer resp.Body.Close()
 	assert.Nil(suite.T(), err, "Could not detect service available.")
@@ -82,7 +83,7 @@ INSERT INTO reactions (uuid,created_at,updated_at,deleted_at,version,created_by,
 		map[string]string{},
 		map[string]string{"Authorization": token, "Content-Type": suite.contentTypeJson},
 		time.Second*10,
-		[]byte(payload),
+		bytes.NewReader([]byte(payload)),
 	)
 	defer resp.Body.Close()
 	assert.Nil(suite.T(), err, "Could not detect service available.")

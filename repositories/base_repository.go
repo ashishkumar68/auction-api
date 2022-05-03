@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"log"
 )
 
@@ -25,7 +26,7 @@ func (repo *Repository) Transaction(trxFunc TrxFunc) error {
 }
 
 func (repo *Repository) Save(val any) error {
-	result := repo.connection.Create(val)
+	result := repo.connection.Omit(clause.Associations).Create(val)
 	if result.Error != nil {
 		log.Printf("could not save %T value to database due to error: %s", val, result.Error)
 		return result.Error

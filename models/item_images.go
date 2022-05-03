@@ -7,6 +7,10 @@ import (
 	"mime/multipart"
 )
 
+const (
+	BaseFSItemsPrefix = "items"
+)
+
 type ItemImage struct {
 	IdentityAuditableModel
 
@@ -14,7 +18,7 @@ type ItemImage struct {
 	ItemId           uint                  `gorm:"column:item_id;index" json:"-"`
 	Item             *Item                 `gorm:"foreignKey:ItemId" json:"item"`
 	MultiPartImgFile *multipart.FileHeader `gorm:"-" json:"-"`
-	Name             string                `gorm:"-" json:"name"`
+	Name             string                `gorm:"column:name;not null" json:"name"`
 }
 
 func (ItemImage) TableName() string {
@@ -27,7 +31,7 @@ func NewItemImageFromMultipartFile(item *Item, file *multipart.FileHeader, actio
 		log.Printf(fmt.Sprintf("could not get renamed file name for: %s", file.Filename))
 		return nil, err
 	}
-	baseImgPath := fmt.Sprintf("item/%s/images", item.Uuid)
+	baseImgPath := fmt.Sprintf("%s/%s/images", BaseFSItemsPrefix, item.Uuid)
 	itemImage := &ItemImage{
 		Path:             fmt.Sprintf("%s/%s", baseImgPath, newFileName),
 		ItemId:           item.ID,
