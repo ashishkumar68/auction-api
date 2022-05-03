@@ -17,6 +17,7 @@ var (
 	CouldNotReadFromMultipartForm = "Could not read from request form."
 	ImagesNotFoundInRequest       = "Could not find images in request."
 	CouldNotSaveImage             = "Could not save image"
+	InvalidRemoveExistingVal      = "Invalid removeExisting value was found."
 )
 
 func IndexAction(c *gin.Context) {

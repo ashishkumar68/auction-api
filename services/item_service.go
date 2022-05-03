@@ -9,6 +9,7 @@ import (
 	"github.com/ashishkumar68/auction-api/utils"
 	"gorm.io/gorm"
 	"log"
+	"os"
 )
 
 var (
@@ -158,6 +159,13 @@ func (service *ItemServiceImplementor) AddItemImages(
 	}
 
 	err := service.repository.Transaction(func(trx *gorm.DB) error {
+		// remove all existing item images if it's an override
+		if form.RemoveExisting {
+			deleteErr := service.repository.DeleteItemImages(*item)
+			if deleteErr != nil {
+				return deleteErr
+			}
+		}
 		for _, image := range itemImages {
 			saveErr := service.repository.Save(image)
 			if saveErr != nil {
@@ -169,6 +177,13 @@ func (service *ItemServiceImplementor) AddItemImages(
 	})
 	if err != nil {
 		return nil, err
+	}
+	if form.RemoveExisting {
+		err = service.DeleteItemImages(item)
+		if err != nil {
+			log.Println("could not delete existing item images due to error", err)
+			return nil, err
+		}
 	}
 	for _, itemImg := range itemImages {
 		err = utils.SaveUploadedFile(itemImg.MultiPartImgFile, utils.GetFileSystemFilePath(itemImg.Path))
@@ -187,4 +202,10 @@ func initItemService(repository *repositories.Repository) ItemService {
 	}
 
 	return itemService
+}
+
+func (service *ItemServiceImplementor) DeleteItemImages(item *models.Item) error {
+	itemDir := fmt.Sprintf("%s/items/%s", utils.GetGlobalUploadsDir(), item.Uuid)
+
+	return os.RemoveAll(itemDir)
 }

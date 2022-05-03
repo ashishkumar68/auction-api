@@ -82,3 +82,13 @@ func (repo *Repository) FindItemImages(item *models.Item) []models.ItemImage {
 
 	return itemImages
 }
+
+func (repo *Repository) DeleteItemImages(item models.Item) error {
+	result := repo.connection.Where("item_id = ?", item.ID).Delete(&models.ItemImage{})
+	if result.Error != nil {
+		log.Println("could not delete item images due to error:", result.Error)
+		return result.Error
+	}
+
+	return nil
+}

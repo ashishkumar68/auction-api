@@ -8,6 +8,7 @@ import (
 type AddItemImagesForm struct {
 	AuditableForm
 
-	Item       *models.Item            `form:"-"`
-	ImageFiles []*multipart.FileHeader `form:"images" binding:"images,max-img-file-size=12"`
+	Item           *models.Item            `form:"-"`
+	ImageFiles     []*multipart.FileHeader `form:"images" binding:"images,max-img-file-size=12"`
+	RemoveExisting bool                    `form:"-"`
 }

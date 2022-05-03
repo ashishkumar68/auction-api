@@ -61,3 +61,7 @@ func GetRenamedFileName(fileName string) (string, error) {
 func GetFileSystemFilePath(filePath string) string {
 	return fmt.Sprintf("%s/%s", os.Getenv("FILE_UPLOADS_DIR"), filePath)
 }
+
+func GetGlobalUploadsDir() string {
+	return os.Getenv("FILE_UPLOADS_DIR")
+}

@@ -117,19 +117,26 @@ func AddItemImages(c *gin.Context) {
 	form.ActionUser = actions.GetActionUserByContext(c)
 	itemId, err := strconv.Atoi(c.Param("itemId"))
 	if err != nil {
-		log.Println(fmt.Sprintf("Could not put item off bid due to err: %s", err))
+		log.Println(fmt.Sprintf("Could not add item images due to err: %s", err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
+		return
+	}
+	removeExisting, err := strconv.ParseBool(c.Query("removeExisting"))
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not add item images due to err: %s", err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidRemoveExistingVal})
 		return
 	}
 	db := actions.GetDBConnectionByContext(c)
 	repository := repositories.NewRepository(db)
 	item := repository.FindItemById(uint(itemId))
 	if item == nil {
-		log.Println(fmt.Sprintf("Could not put item off bid due to err: %s", err))
+		log.Println(fmt.Sprintf("Could not add item images due to err: %s", err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
 		return
 	}
 	form.Item = item
+	form.RemoveExisting = removeExisting
 
 	if err = c.MustBindWith(&form, binding.FormMultipart); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
