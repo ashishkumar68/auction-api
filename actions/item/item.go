@@ -199,3 +199,38 @@ func DeleteItemImage(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, nil)
 }
+
+func DeleteItemImages(c *gin.Context) {
+	var form forms.RemoveItemImagesForm
+	form.ActionUser = actions.GetActionUserByContext(c)
+
+	itemId, err := strconv.Atoi(c.Param("itemId"))
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not delete item images due to err: %s", err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
+		return
+	}
+	db := actions.GetDBConnectionByContext(c)
+	repository := repositories.NewRepository(db)
+	item := repository.FindItemById(uint(itemId))
+	if item == nil {
+		log.Println(fmt.Sprintf("Could not delete item images due to err: %s", err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
+		return
+	}
+
+	form.Item = item
+	itemService := services.NewItemService(db)
+	err = itemService.RemoveItemImages(c, form)
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not delete item images due to err: %s", err))
+		if err == services.ItemNotOwnedByActionUser {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": actions.InternalServerErrMsg})
+		}
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}

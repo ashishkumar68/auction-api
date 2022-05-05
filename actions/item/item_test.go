@@ -576,3 +576,135 @@ INSERT INTO item_images (id, uuid, created_at, updated_at, deleted_at, version, 
 	itemImg = suite.repository.FindItemImage(1, 1)
 	assert.Nil(suite.T(), itemImg)
 }
+
+func (suite *ItemTestSuite) TestRemoveItemImagesByAuthor() {
+	suite.DB.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
+(1, "581b7c3c-3fa8-4642-801b-30f63111f621",'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01");
+`)
+	suite.DB.Exec(`
+INSERT INTO item_images (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, path, item_id) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'guitar_2_abc.jpg',"items/581b7c3c-3fa8-4642-801b-30f63111f621/images/guitar_2_abc.jpg", 1),
+(2, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'guitar_1_abc.jpg',"items/581b7c3c-3fa8-4642-801b-30f63111f621/images/guitar_1_abc.jpg", 1)
+;
+`)
+
+	item := suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+	assert.True(suite.T(), item.IsOwner(*suite.actionUser))
+
+	itemImages := suite.repository.FindItemImages(item)
+	assert.NotNil(suite.T(), itemImages)
+	assert.Len(suite.T(), itemImages, 2)
+
+	image1Bytes, err := io.ReadAll(suite.itemImageFile1)
+	assert.Nil(suite.T(), err)
+	dirPath := fmt.Sprintf("%s/items/%s/images", utils.GetGlobalUploadsDir(), item.Uuid)
+	err = os.MkdirAll(dirPath, 0755)
+	assert.Nil(suite.T(), err)
+	image2Bytes, err := io.ReadAll(suite.itemImageFile2)
+	assert.Nil(suite.T(), err)
+
+	file1Path := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), itemImages[0].Path)
+	err = os.WriteFile(file1Path, image1Bytes, 0755)
+	assert.Nil(suite.T(), err)
+	file2Path := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), itemImages[1].Path)
+	err = os.WriteFile(file2Path, image2Bytes, 0755)
+	assert.Nil(suite.T(), err)
+
+	resp, err := client.MakeRequest(
+		fmt.Sprintf("%s://%s:%s%s/items/%d/images", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, item.ID),
+		"DELETE",
+		map[string]string{},
+		map[string]string{"Authorization": suite.loggedInToken, "Content-Type": suite.contentTypeJson},
+		time.Second*10,
+		nil,
+	)
+	defer resp.Body.Close()
+
+	assert.Equal(suite.T(), http.StatusNoContent, resp.StatusCode)
+
+	itemImages = suite.repository.FindItemImages(item)
+	assert.Nil(suite.T(), itemImages)
+	assert.Len(suite.T(), itemImages, 0)
+}
+
+func (suite *ItemTestSuite) TestDontAllowRemoveItemImagesByNonAuthor() {
+	suite.DB.Exec(`
+INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) 
+VALUES (6, uuid_v4(), NOW(), NOW(), "John", "Doe", "johndoe25@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
+`)
+	suite.DB.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
+(1, "581b7c3c-3fa8-4642-801b-30f63111f621",'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01");
+`)
+	suite.DB.Exec(`
+INSERT INTO item_images (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, path, item_id) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'guitar_2_abc.jpg',"items/581b7c3c-3fa8-4642-801b-30f63111f621/images/guitar_2_abc.jpg", 1),
+(2, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'guitar_1_abc.jpg',"items/581b7c3c-3fa8-4642-801b-30f63111f621/images/guitar_1_abc.jpg", 1)
+;
+`)
+
+	item := suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+	actionUser := suite.repository.FindUserById(6)
+	assert.NotNil(suite.T(), actionUser)
+	assert.False(suite.T(), item.IsOwner(*actionUser))
+
+	itemImages := suite.repository.FindItemImages(item)
+	assert.NotNil(suite.T(), itemImages)
+	assert.Len(suite.T(), itemImages, 2)
+
+	dirPath := fmt.Sprintf("%s/items/%s/images", utils.GetGlobalUploadsDir(), item.Uuid)
+	err := os.MkdirAll(dirPath, 0755)
+	assert.Nil(suite.T(), err)
+
+	image1Bytes, err := io.ReadAll(suite.itemImageFile1)
+	assert.Nil(suite.T(), err)
+	image2Bytes, err := io.ReadAll(suite.itemImageFile2)
+	assert.Nil(suite.T(), err)
+
+	file1Path := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), itemImages[0].Path)
+	err = os.WriteFile(file1Path, image1Bytes, 0755)
+	assert.Nil(suite.T(), err)
+	file2Path := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), itemImages[1].Path)
+	err = os.WriteFile(file2Path, image2Bytes, 0755)
+	assert.Nil(suite.T(), err)
+
+	token, err := services.GenerateNewJwtToken(actionUser, services.TokenTypeAccess)
+	assert.Nil(suite.T(), err)
+
+	resp, err := client.MakeRequest(
+		fmt.Sprintf("%s://%s:%s%s/items/%d/images", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, item.ID),
+		"DELETE",
+		map[string]string{},
+		map[string]string{"Authorization": token},
+		time.Second*10,
+		nil,
+	)
+	resp.Body.Close()
+	assert.Equal(suite.T(), http.StatusForbidden, resp.StatusCode)
+	assert.Nil(suite.T(), err)
+
+	// trying to delete single item.
+	itemImages = suite.repository.FindItemImages(item)
+	assert.Len(suite.T(), itemImages, 2)
+
+	resp, err = client.MakeRequest(
+		fmt.Sprintf("%s://%s:%s%s/items/%d/images/%d", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, item.ID, itemImages[0].ID),
+		"DELETE",
+		map[string]string{},
+		map[string]string{"Authorization": token},
+		time.Second*10,
+		nil,
+	)
+	defer resp.Body.Close()
+	assert.Equal(suite.T(), http.StatusForbidden, resp.StatusCode)
+	assert.Nil(suite.T(), err)
+
+	// verify that items still exist.
+	itemImages = suite.repository.FindItemImages(item)
+	assert.Len(suite.T(), itemImages, 2)
+}

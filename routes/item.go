@@ -11,6 +11,7 @@ func MapItemRoutes(itemsGroup *gin.RouterGroup) {
 	itemsGroup.PATCH("/items/:itemId", item.EditItem)
 	itemsGroup.POST("/items/:itemId/images", item.AddItemImages)
 	itemsGroup.DELETE("/items/:itemId/images/:imageId", item.DeleteItemImage)
+	itemsGroup.DELETE("/items/:itemId/images", item.DeleteItemImages)
 
 	itemsGroup.PUT("/items/:itemId/mark-off-bid", item.MarkItemOffBid)
 	itemsGroup.POST("/items/:itemId/bid", item.PlaceBidOnItem)

@@ -27,6 +27,7 @@ type ItemService interface {
 	PlaceItemBid(ctx context.Context, form forms.PlaceNewItemBidForm) (*models.Bid, error)
 	AddItemImages(ctx context.Context, form forms.AddItemImagesForm) ([]*models.ItemImage, error)
 	RemoveItemImage(ctx context.Context, form forms.RemoveItemImageForm) error
+	RemoveItemImages(ctx context.Context, form forms.RemoveItemImagesForm) error
 }
 
 type ItemServiceImplementor struct {
@@ -162,7 +163,7 @@ func (service *ItemServiceImplementor) AddItemImages(
 	err := service.repository.Transaction(func(trx *gorm.DB) error {
 		// remove all existing item images if it's an override
 		if form.RemoveExisting {
-			deleteErr := service.repository.DeleteItemImages(*item)
+			deleteErr := service.repository.DeleteItemImages(item)
 			if deleteErr != nil {
 				return deleteErr
 			}
@@ -210,6 +211,23 @@ func (service *ItemServiceImplementor) RemoveItemImage(_ context.Context, form f
 	err = service.DeleteFSItemImage(form.ItemImage)
 	if err != nil {
 		log.Println(fmt.Sprintf("could not delete item image from File system due to error: %s", err.Error()))
+		return err
+	}
+
+	return nil
+}
+
+func (service *ItemServiceImplementor) RemoveItemImages(_ context.Context, form forms.RemoveItemImagesForm) error {
+
+	if !form.Item.IsOwner(*form.ActionUser) {
+		return ItemNotOwnedByActionUser
+	}
+	if err := service.repository.DeleteItemImages(form.Item); err != nil {
+		log.Println(fmt.Sprintf("could not delete item:%d images from DB due to error:%s", form.Item.ID, err.Error()))
+		return err
+	}
+	if err := service.DeleteFSItemImages(form.Item); err != nil {
+		log.Println(fmt.Sprintf("could not delete item:%d images from FS due to error:%s", form.Item.ID, err.Error()))
 		return err
 	}
 

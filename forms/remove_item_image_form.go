@@ -7,3 +7,9 @@ type RemoveItemImageForm struct {
 
 	ItemImage *models.ItemImage `form:"-"`
 }
+
+type RemoveItemImagesForm struct {
+	AuditableForm
+
+	Item *models.Item `form:"-"`
+}
