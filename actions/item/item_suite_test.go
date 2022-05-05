@@ -50,13 +50,6 @@ func (suite *ItemTestSuite) SetupSuite() {
 	suite.contentTypeMultipart = "multipart/form-data"
 	suite.baseFSItemsPath = fmt.Sprintf("%s/%s", os.Getenv("FILE_UPLOADS_DIR"), models.BaseFSItemsPrefix)
 	suite.itemsRoute = fmt.Sprintf("%s://%s:%s%s/items", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
-
-	itemImageFile1, err := os.Open(fmt.Sprintf("%s/actions/item/fixtures/guitar_1.jpeg", os.Getenv("PROJECTDIR")))
-	assert.Nilf(suite.T(), err, "could not load test file")
-	suite.itemImageFile1 = itemImageFile1
-	itemImageFile2, err := os.Open(fmt.Sprintf("%s/actions/item/fixtures/guitar_2.jpg", os.Getenv("PROJECTDIR")))
-	assert.Nilf(suite.T(), err, "could not load test file")
-	suite.itemImageFile2 = itemImageFile2
 }
 
 // SetupTest runs before each test.
@@ -79,10 +72,19 @@ VALUES (5, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a
 	// clean up items file system.
 	err = os.RemoveAll(suite.baseFSItemsPath)
 	assert.Nil(suite.T(), err, fmt.Sprintf("could not clear items base path: %s", suite.baseFSItemsPath))
+
+	itemImageFile1, err := os.Open(fmt.Sprintf("%s/actions/item/fixtures/guitar_1.jpeg", os.Getenv("PROJECTDIR")))
+	assert.Nilf(suite.T(), err, "could not load test file")
+	suite.itemImageFile1 = itemImageFile1
+	itemImageFile2, err := os.Open(fmt.Sprintf("%s/actions/item/fixtures/guitar_2.jpg", os.Getenv("PROJECTDIR")))
+	assert.Nilf(suite.T(), err, "could not load test file")
+	suite.itemImageFile2 = itemImageFile2
 }
 
 func (suite *ItemTestSuite) TearDownTest() {
 	migrations.ForceTruncateAllTables(suite.DB)
+	err := os.RemoveAll(suite.baseFSItemsPath)
+	assert.Nil(suite.T(), err, fmt.Sprintf("could not clear items base path: %s", suite.baseFSItemsPath))
 }
 
 func TestItemTestSuite(t *testing.T) {

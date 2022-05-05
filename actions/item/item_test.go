@@ -8,6 +8,7 @@ import (
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/response"
 	"github.com/ashishkumar68/auction-api/services"
+	"github.com/ashishkumar68/auction-api/utils"
 	"github.com/morkid/paginate"
 	"github.com/stretchr/testify/assert"
 	"io"
@@ -437,6 +438,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 
 	respBytes, err := io.ReadAll(resp.Body)
 	assert.Nil(suite.T(), err)
+
 	err = json.Unmarshal(respBytes, &itemImages)
 	assert.Nil(suite.T(), err)
 
@@ -528,4 +530,49 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 	assert.NotNil(suite.T(), itemImages[0].ID)
 	assert.NotEqual(suite.T(), "", itemImages[0].Name)
 	assert.Contains(suite.T(), itemImages[0].Name, "guitar_2")
+}
+
+func (suite *ItemTestSuite) TestRemoveItemImageByAuthor() {
+	suite.DB.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
+(1, "581b7c3c-3fa8-4642-801b-30f63111f621",'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01");
+`)
+	suite.DB.Exec(`
+INSERT INTO item_images (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, path, item_id) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'guitar_2_abc.jpg',"items/581b7c3c-3fa8-4642-801b-30f63111f621/images/guitar_2_abc.jpg", 1)
+;
+`)
+
+	itemImg := suite.repository.FindItemImage(1, 1)
+	assert.NotNil(suite.T(), itemImg)
+	assert.NotNil(suite.T(), itemImg.Item)
+	assert.False(suite.T(), itemImg.Item.IsZero())
+	assert.False(suite.T(), itemImg.Item.IsOffBid())
+	assert.True(suite.T(), itemImg.Item.IsOwner(*suite.actionUser))
+
+	image1Bytes, err := io.ReadAll(suite.itemImageFile1)
+	assert.Nil(suite.T(), err)
+	dirPath := fmt.Sprintf("%s/items/%s/images", utils.GetGlobalUploadsDir(), itemImg.Item.Uuid)
+	filePath := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), itemImg.Path)
+	err = os.MkdirAll(dirPath, 0755)
+	assert.Nil(suite.T(), err)
+
+	err = os.WriteFile(filePath, image1Bytes, 0755)
+	assert.Nil(suite.T(), err)
+
+	resp, err := client.MakeRequest(
+		fmt.Sprintf("%s://%s:%s%s/items/%d/images/%d", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, itemImg.ItemId, itemImg.Item.ID),
+		"DELETE",
+		map[string]string{},
+		map[string]string{"Authorization": suite.loggedInToken, "Content-Type": suite.contentTypeJson},
+		time.Second*10,
+		nil,
+	)
+	defer resp.Body.Close()
+
+	assert.Equal(suite.T(), http.StatusNoContent, resp.StatusCode)
+
+	itemImg = suite.repository.FindItemImage(1, 1)
+	assert.Nil(suite.T(), itemImg)
 }

@@ -34,3 +34,13 @@ func (repo *Repository) Save(val any) error {
 
 	return nil
 }
+
+func (repo *Repository) Delete(val any) error {
+	result := repo.connection.Omit(clause.Associations).Delete(val)
+	if result.Error != nil {
+		log.Printf("could not delete %T value from database due to error: %s", val, result.Error)
+		return result.Error
+	}
+
+	return nil
+}

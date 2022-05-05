@@ -121,11 +121,14 @@ func AddItemImages(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
 		return
 	}
-	removeExisting, err := strconv.ParseBool(c.Query("removeExisting"))
-	if err != nil {
-		log.Println(fmt.Sprintf("Could not add item images due to err: %s", err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidRemoveExistingVal})
-		return
+	if c.Query("removeExisting") != "" {
+		removeExisting, err := strconv.ParseBool(c.Query("removeExisting"))
+		if err != nil {
+			log.Println(fmt.Sprintf("Could not add item images due to err: %s", err))
+			c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidRemoveExistingVal})
+			return
+		}
+		form.RemoveExisting = removeExisting
 	}
 	db := actions.GetDBConnectionByContext(c)
 	repository := repositories.NewRepository(db)
@@ -136,7 +139,6 @@ func AddItemImages(c *gin.Context) {
 		return
 	}
 	form.Item = item
-	form.RemoveExisting = removeExisting
 
 	if err = c.MustBindWith(&form, binding.FormMultipart); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -155,4 +157,45 @@ func AddItemImages(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, itemImages)
+}
+
+func DeleteItemImage(c *gin.Context) {
+	var form forms.RemoveItemImageForm
+	form.ActionUser = actions.GetActionUserByContext(c)
+
+	itemId, err := strconv.Atoi(c.Param("itemId"))
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not delete item image due to err: %s", err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
+		return
+	}
+	imageId, err := strconv.Atoi(c.Param("imageId"))
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not delete item image due to err: %s", err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidImageIdFoundErr})
+		return
+	}
+	db := actions.GetDBConnectionByContext(c)
+	repository := repositories.NewRepository(db)
+	itemImage := repository.FindItemImage(uint(imageId), uint(itemId))
+	if itemImage == nil {
+		log.Println(fmt.Sprintf("Could not delete item image due to err: %s", err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidImageIdFoundErr})
+		return
+	}
+
+	form.ItemImage = itemImage
+	itemService := services.NewItemService(db)
+	err = itemService.RemoveItemImage(c, form)
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not delete item image due to err: %s", err))
+		if err == services.ItemNotOwnedByActionUser {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": actions.InternalServerErrMsg})
+		}
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
 }

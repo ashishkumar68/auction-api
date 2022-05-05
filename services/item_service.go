@@ -26,6 +26,7 @@ type ItemService interface {
 	MarkItemOffBid(ctx context.Context, form forms.MarkItemOffBidForm) error
 	PlaceItemBid(ctx context.Context, form forms.PlaceNewItemBidForm) (*models.Bid, error)
 	AddItemImages(ctx context.Context, form forms.AddItemImagesForm) ([]*models.ItemImage, error)
+	RemoveItemImage(ctx context.Context, form forms.RemoveItemImageForm) error
 }
 
 type ItemServiceImplementor struct {
@@ -179,7 +180,7 @@ func (service *ItemServiceImplementor) AddItemImages(
 		return nil, err
 	}
 	if form.RemoveExisting {
-		err = service.DeleteItemImages(item)
+		err = service.DeleteFSItemImages(item)
 		if err != nil {
 			log.Println("could not delete existing item images due to error", err)
 			return nil, err
@@ -196,6 +197,25 @@ func (service *ItemServiceImplementor) AddItemImages(
 	return itemImages, nil
 }
 
+func (service *ItemServiceImplementor) RemoveItemImage(_ context.Context, form forms.RemoveItemImageForm) error {
+
+	if !form.ItemImage.Item.IsOwner(*form.ActionUser) {
+		return ItemNotOwnedByActionUser
+	}
+	err := service.repository.Delete(form.ItemImage)
+	if err != nil {
+		log.Println(fmt.Sprintf("could not delete item image from DB due to error: %s", err.Error()))
+		return err
+	}
+	err = service.DeleteFSItemImage(form.ItemImage)
+	if err != nil {
+		log.Println(fmt.Sprintf("could not delete item image from File system due to error: %s", err.Error()))
+		return err
+	}
+
+	return nil
+}
+
 func initItemService(repository *repositories.Repository) ItemService {
 	itemService := &ItemServiceImplementor{
 		repository: repository,
@@ -204,8 +224,13 @@ func initItemService(repository *repositories.Repository) ItemService {
 	return itemService
 }
 
-func (service *ItemServiceImplementor) DeleteItemImages(item *models.Item) error {
+func (service *ItemServiceImplementor) DeleteFSItemImages(item *models.Item) error {
 	itemDir := fmt.Sprintf("%s/items/%s", utils.GetGlobalUploadsDir(), item.Uuid)
 
 	return os.RemoveAll(itemDir)
+}
+
+func (service *ItemServiceImplementor) DeleteFSItemImage(image *models.ItemImage) error {
+	itemImagePath := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), image.Path)
+	return os.Remove(itemImagePath)
 }

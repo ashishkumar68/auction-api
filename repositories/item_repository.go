@@ -92,3 +92,20 @@ func (repo *Repository) DeleteItemImages(item models.Item) error {
 
 	return nil
 }
+
+func (repo *Repository) FindItemImage(imageId uint, itemId uint) *models.ItemImage {
+	var image models.ItemImage
+	repo.connection.
+		Preload("Item").
+		Preload("Item.UserCreated").
+		Joins("JOIN items ON item_images.item_id = items.id").
+		Joins("JOIN users ON items.created_by = users.id").
+		Where("item_images.id = ? AND items.id = ?", imageId, itemId).
+		Find(&image)
+
+	if image.IsZero() {
+		return nil
+	}
+
+	return &image
+}
