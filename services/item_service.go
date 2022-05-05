@@ -167,6 +167,11 @@ func (service *ItemServiceImplementor) AddItemImages(
 			if deleteErr != nil {
 				return deleteErr
 			}
+		} else {
+			currentImages := service.repository.FindItemImages(item)
+			if nil != currentImages && (len(currentImages)+len(itemImages) > models.MaxImagesPerItem) {
+				return models.MaxItemImagesReachedErr
+			}
 		}
 		for _, image := range itemImages {
 			saveErr := service.repository.Save(image)

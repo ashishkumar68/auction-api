@@ -35,7 +35,7 @@ func MakeRequest(
 	return client.Do(req)
 }
 
-func MakeMultiPartWriterFromFiles(files []*os.File, fieldName string) (io.ReadWriter, string, error) {
+func MakeMultiPartWriterFromFiles(fieldName string, files ...*os.File) (io.ReadWriter, string, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
 	for _, file := range files {

@@ -31,6 +31,10 @@ type ItemTestSuite struct {
 	baseFSItemsPath      string
 	itemImageFile1       *os.File
 	itemImageFile2       *os.File
+	itemImageFile3       *os.File
+	itemImageFile4       *os.File
+	itemImageFile5       *os.File
+	itemImageFile6       *os.File
 
 	repository *repositories.Repository
 	actionUser *models.User
@@ -79,6 +83,18 @@ VALUES (5, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a
 	itemImageFile2, err := os.Open(fmt.Sprintf("%s/actions/item/fixtures/guitar_2.jpg", os.Getenv("PROJECTDIR")))
 	assert.Nilf(suite.T(), err, "could not load test file")
 	suite.itemImageFile2 = itemImageFile2
+	itemImageFile3, err := os.Open(fmt.Sprintf("%s/actions/item/fixtures/guitar_3.jpeg", os.Getenv("PROJECTDIR")))
+	assert.Nilf(suite.T(), err, "could not load test file")
+	suite.itemImageFile3 = itemImageFile3
+	itemImageFile4, err := os.Open(fmt.Sprintf("%s/actions/item/fixtures/guitar_4.jpeg", os.Getenv("PROJECTDIR")))
+	assert.Nilf(suite.T(), err, "could not load test file")
+	suite.itemImageFile4 = itemImageFile4
+	itemImageFile5, err := os.Open(fmt.Sprintf("%s/actions/item/fixtures/guitar_5.jpeg", os.Getenv("PROJECTDIR")))
+	assert.Nilf(suite.T(), err, "could not load test file")
+	suite.itemImageFile5 = itemImageFile5
+	itemImageFile6, err := os.Open(fmt.Sprintf("%s/actions/item/fixtures/guitar_6.jpeg", os.Getenv("PROJECTDIR")))
+	assert.Nilf(suite.T(), err, "could not load test file")
+	suite.itemImageFile6 = itemImageFile6
 }
 
 func (suite *ItemTestSuite) TearDownTest() {

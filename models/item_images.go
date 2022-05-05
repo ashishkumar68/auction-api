@@ -9,6 +9,11 @@ import (
 
 const (
 	BaseFSItemsPrefix = "items"
+	MaxImagesPerItem  = 5
+)
+
+var (
+	MaxItemImagesReachedErr = fmt.Errorf("allowed max item images count: %d exceeded", MaxImagesPerItem)
 )
 
 type ItemImage struct {
@@ -19,6 +24,7 @@ type ItemImage struct {
 	Item             *Item                 `gorm:"foreignKey:ItemId" json:"item"`
 	MultiPartImgFile *multipart.FileHeader `gorm:"-" json:"-"`
 	Name             string                `gorm:"column:name;not null" json:"name"`
+	IsThumbnail      bool                  `gorm:"column:is_thumbnail;not null;default:0" json:"isThumbnail"`
 }
 
 func (ItemImage) TableName() string {

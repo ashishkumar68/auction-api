@@ -148,7 +148,9 @@ func AddItemImages(c *gin.Context) {
 	itemImages, err := itemService.AddItemImages(c, form)
 	if err != nil {
 		log.Println(fmt.Sprintf("Could not add item images due to error: %s", err))
-		if err == services.ItemNotOwnedByActionUser {
+		if err == models.MaxItemImagesReachedErr {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else if err == services.ItemNotOwnedByActionUser {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": actions.InternalServerErrMsg})

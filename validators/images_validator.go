@@ -71,3 +71,19 @@ var MaxUploadImageFileSize validator.Func = func(fl validator.FieldLevel) bool {
 
 	return true
 }
+
+var MaxUploadFilesCount validator.Func = func(fl validator.FieldLevel) bool {
+	files, ok := fl.Field().Interface().([]*multipart.FileHeader)
+	if !ok {
+		return false
+	}
+
+	maxAllowedCount, err := strconv.Atoi(fl.Param())
+	utils.PanicIf(err)
+
+	if maxAllowedCount < len(files) {
+		return false
+	}
+
+	return true
+}
