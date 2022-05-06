@@ -41,7 +41,6 @@ func NewItemImageFromMultipartFile(item *Item, file *multipart.FileHeader, actio
 	itemImage := &ItemImage{
 		Path:             fmt.Sprintf("%s/%s", baseImgPath, newFileName),
 		ItemId:           item.ID,
-		Item:             item,
 		MultiPartImgFile: file,
 		Name:             newFileName,
 	}

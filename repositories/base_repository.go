@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	"log"
 )
 
@@ -26,7 +25,7 @@ func (repo *Repository) Transaction(trxFunc TrxFunc) error {
 }
 
 func (repo *Repository) Save(val any) error {
-	result := repo.connection.Omit(clause.Associations).Create(val)
+	result := repo.connection.Create(val)
 	if result.Error != nil {
 		log.Printf("could not save %T value to database due to error: %s", val, result.Error)
 		return result.Error
@@ -35,8 +34,18 @@ func (repo *Repository) Save(val any) error {
 	return nil
 }
 
+func (repo *Repository) Update(val any) error {
+	result := repo.connection.Updates(val)
+	if result.Error != nil {
+		log.Printf("could not update %T value to database due to error: %s", val, result.Error)
+		return result.Error
+	}
+
+	return nil
+}
+
 func (repo *Repository) Delete(val any) error {
-	result := repo.connection.Omit(clause.Associations).Delete(val)
+	result := repo.connection.Delete(val)
 	if result.Error != nil {
 		log.Printf("could not delete %T value from database due to error: %s", val, result.Error)
 		return result.Error

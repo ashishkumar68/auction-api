@@ -58,23 +58,19 @@ func (base *BaseModel) SetUuid(newUuid string) *BaseModel {
 }
 
 func (auditModel *AuditModel) SetCreatedBy(actionUser *User) *AuditModel {
-	auditModel.UserCreated = actionUser
 	auditModel.UserCreatedBy = actionUser.ID
-	auditModel.UserUpdated = actionUser
 	auditModel.UserUpdatedBy = actionUser.ID
 
 	return auditModel
 }
 
 func (auditModel *AuditModel) SetUpdatedBy(actionUser *User) *AuditModel {
-	auditModel.UserUpdated = actionUser
 	auditModel.UserUpdatedBy = actionUser.ID
 
 	return auditModel
 }
 
 func (auditModel *AuditModel) SetDeletedBy(actionUser *User) *AuditModel {
-	auditModel.UserDeleted = actionUser
 	auditModel.UserDeletedBy = &actionUser.ID
 
 	return auditModel
