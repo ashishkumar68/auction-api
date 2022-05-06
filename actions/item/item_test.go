@@ -434,7 +434,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 		payload,
 	)
 	defer resp.Body.Close()
-	var itemImages []models.ItemImage
+	var itemImages []*models.ItemImage
 
 	respBytes, err := io.ReadAll(resp.Body)
 	assert.Nil(suite.T(), err)
@@ -478,7 +478,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 		time.Second*10,
 		payload,
 	)
-	var itemImages []models.ItemImage
+	var itemImages []*models.ItemImage
 
 	respBytes, err := io.ReadAll(resp.Body)
 	assert.Nil(suite.T(), err)
@@ -776,14 +776,22 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 
 	defer resp.Body.Close()
 
-	var itemImages []models.ItemImage
+	var itemImages []*models.ItemImage
 	respBytes, err := io.ReadAll(resp.Body)
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), http.StatusCreated, resp.StatusCode)
 	err = json.Unmarshal(respBytes, &itemImages)
 	assert.Nil(suite.T(), err)
 
-	itemImages = suite.repository.FindItemImages(item)
-	assert.NotNil(suite.T(), itemImages)
-	assert.Len(suite.T(), itemImages, models.MaxImagesPerItem)
+	countThumbnail := 0
+	item = suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item.ItemImages)
+	assert.Len(suite.T(), item.ItemImages, models.MaxImagesPerItem)
+	for _, itemImg := range item.ItemImages {
+		if itemImg.IsThumbnail {
+			countThumbnail += 1
+		}
+	}
+
+	assert.Equal(suite.T(), 1, countThumbnail)
 }

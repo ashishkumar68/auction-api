@@ -161,6 +161,7 @@ func (service *ItemServiceImplementor) AddItemImages(
 	}
 
 	err := service.repository.Transaction(func(trx *gorm.DB) error {
+		var thumbnail *models.ItemImage
 		// remove all existing item images if it's an override
 		if form.RemoveExisting {
 			deleteErr := service.repository.DeleteItemImages(item)
@@ -172,14 +173,25 @@ func (service *ItemServiceImplementor) AddItemImages(
 			if nil != currentImages && (len(currentImages)+len(itemImages) > models.MaxImagesPerItem) {
 				return models.MaxItemImagesReachedErr
 			}
+			for _, img := range currentImages {
+				if img.IsThumbnail && thumbnail == nil {
+					thumbnail = img
+					break
+				}
+			}
 		}
 		for _, image := range itemImages {
+			if thumbnail == nil {
+				image.IsThumbnail = true
+				thumbnail = image
+			}
 			saveErr := service.repository.Save(image)
 			if saveErr != nil {
 				log.Println(fmt.Sprintf("found error: %s while saving item image to database", saveErr))
 				return saveErr
 			}
 		}
+
 		return nil
 	})
 	if err != nil {

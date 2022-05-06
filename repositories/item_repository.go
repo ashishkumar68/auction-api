@@ -10,8 +10,10 @@ import (
 func (repo *Repository) FindItemById(id uint) *models.Item {
 	var item models.Item
 	repo.connection.
-		Joins("UserCreated").
-		Joins("UserUpdated").
+		Joins("LEFT JOIN item_images ON item_images.item_id = items.id").
+		Preload("UserCreated").
+		Preload("UserUpdated").
+		Preload("ItemImages").
 		Find(&item, id)
 	if item.IsZero() {
 		return nil
@@ -74,8 +76,8 @@ func (repo *Repository) ListUserItems(user *models.User) *gorm.DB {
 		Order("items.id DESC")
 }
 
-func (repo *Repository) FindItemImages(item *models.Item) []models.ItemImage {
-	var itemImages []models.ItemImage
+func (repo *Repository) FindItemImages(item *models.Item) []*models.ItemImage {
+	var itemImages []*models.ItemImage
 	repo.connection.
 		Model(&models.ItemImage{}).
 		Where("item_id = ?", item.ID).Find(&itemImages)

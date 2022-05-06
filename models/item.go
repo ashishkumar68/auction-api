@@ -32,8 +32,8 @@ type Item struct {
 	LastBidDate time.Time    `gorm:"column:last_bid_date;type:date;not null" json:"lastBidDate"`
 	OffBid      bool         `gorm:"column:off_bid;type:tinyint(1);not null;default:0" json:"isOffBid"`
 
-	Bids   []Bid
-	Images []*ItemImage
+	Bids       []Bid
+	ItemImages []*ItemImage
 }
 
 func (Item) TableName() string {
@@ -164,14 +164,14 @@ func (bid *Bid) AfterCreate(db *gorm.DB) error {
 }
 
 func (item *Item) AddImage(img *ItemImage) *Item {
-	item.Images = append(item.Images, img)
+	item.ItemImages = append(item.ItemImages, img)
 
 	return item
 }
 
 func (item *Item) RemoveImage(img *ItemImage) *Item {
 	deleteImgIndex := -1
-	for index, itemImg := range item.Images {
+	for index, itemImg := range item.ItemImages {
 		if itemImg.IsSameAs(img.BaseModel) {
 			deleteImgIndex = index
 			break
@@ -180,7 +180,7 @@ func (item *Item) RemoveImage(img *ItemImage) *Item {
 	if deleteImgIndex == -1 {
 		return item
 	}
-	item.Images = append(item.Images[:deleteImgIndex], item.Images[deleteImgIndex+1:]...)
+	item.ItemImages = append(item.ItemImages[:deleteImgIndex], item.ItemImages[deleteImgIndex+1:]...)
 
 	return item
 }
