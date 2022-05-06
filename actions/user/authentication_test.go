@@ -90,6 +90,13 @@ VALUES (uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmithtest@abc.com", "$2a$
 	defer resp.Body.Close()
 	assert.Nil(suite.T(), err, "Could not Parse HTTP message response.")
 	assert.Equal(suite.T(), http.StatusBadRequest, resp.StatusCode)
+	assert.Equal(suite.T(), "*", resp.Header.Get("Access-Control-Allow-Origin"))
+	assert.Equal(
+		suite.T(),
+		"Content-Type, Content-Length, Accept-Encoding, Authorization, accept, origin, Cache-Control, X-Requested-With",
+		resp.Header.Get("Access-Control-Allow-Headers"),
+	)
+	assert.Equal(suite.T(), "POST, OPTIONS, GET, PUT, PATCH, DELETE", resp.Header.Get("Access-Control-Allow-Methods"))
 
 	existingUser = suite.repository.FindUserByEmail("johnsmithtest@abc.com")
 	assert.False(suite.T(), existingUser.IsZero())
