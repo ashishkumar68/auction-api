@@ -13,9 +13,7 @@ import (
 )
 
 func SetupRoutes(engine *gin.Engine) {
-	apiGroup := engine.Group(
-		"/api", middleware.CorsRoute(), middleware.AuthenticatedRoute(), middleware.TransactionRoute(),
-	)
+	apiGroup := engine.Group("/api", middleware.CorsRoute())
 	routes.MapIndexRoutes(engine)
 	routes.MapUserRoutes(apiGroup)
 	routes.MapItemRoutes(apiGroup)

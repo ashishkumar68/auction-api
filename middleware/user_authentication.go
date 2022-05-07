@@ -3,9 +3,7 @@ package middleware
 import (
 	"fmt"
 	"github.com/ashishkumar68/auction-api/actions"
-	"github.com/ashishkumar68/auction-api/database"
 	"github.com/ashishkumar68/auction-api/repositories"
-	"github.com/ashishkumar68/auction-api/routes"
 	"github.com/ashishkumar68/auction-api/services"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -14,25 +12,7 @@ import (
 )
 
 func AuthenticatedRoute() gin.HandlerFunc {
-	isAnonymousRoute := func(c *gin.Context) bool {
-		isAnonymous := false
-		if allowedMethods, ok := routes.AnonymousRoutes[c.Request.URL.Path]; ok {
-			for _, method := range allowedMethods.([]string) {
-				if method == c.Request.Method {
-					isAnonymous = true
-					break
-				}
-			}
-		}
-
-		return isAnonymous
-	}
-
 	return func(c *gin.Context) {
-		if isAnonymousRoute(c) {
-			c.Next()
-			return
-		}
 		tokenString := strings.Trim(c.Request.Header.Get("Authorization"), "")
 		token, err := services.VerifyJwtToken(tokenString)
 		if err != nil {
@@ -42,7 +22,7 @@ func AuthenticatedRoute() gin.HandlerFunc {
 		}
 
 		email := token.Header["username"].(string)
-		dbConnection := database.GetDBHandle().WithContext(c)
+		dbConnection := actions.GetDBConnectionByContext(c)
 		loggedInUser := repositories.NewRepository(dbConnection).FindUserByEmail(email)
 		if nil == loggedInUser || loggedInUser.IsZero() || !loggedInUser.IsActive {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": actions.InvalidCredentials})
