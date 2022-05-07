@@ -28,6 +28,7 @@ type ItemService interface {
 	AddItemImages(ctx context.Context, form forms.AddItemImagesForm) ([]*models.ItemImage, error)
 	RemoveItemImage(ctx context.Context, form forms.RemoveItemImageForm) error
 	RemoveItemImages(ctx context.Context, form forms.RemoveItemImagesForm) error
+	GetItemImage(ctx context.Context, itemImg *models.ItemImage) (fileName string, filePath string, err error)
 }
 
 type ItemServiceImplementor struct {
@@ -249,6 +250,16 @@ func (service *ItemServiceImplementor) RemoveItemImages(_ context.Context, form 
 	}
 
 	return nil
+}
+
+func (service *ItemServiceImplementor) GetItemImage(_ context.Context, itemImg *models.ItemImage) (string, string, error) {
+	filePath := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), itemImg.Path)
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return "", "", models.ItemImageNotFoundErr
+	}
+
+	return itemImg.Name, filePath, nil
 }
 
 func initItemService(repository *repositories.Repository) ItemService {

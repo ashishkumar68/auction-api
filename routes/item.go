@@ -15,6 +15,7 @@ func MapItemRoutes(itemsGroup *gin.RouterGroup) {
 	itemsTxRouteGroup.POST("/:itemId/images", middleware.AuthenticatedRoute(), item.AddItemImages)
 	itemsTxRouteGroup.DELETE("/:itemId/images/:imageId", middleware.AuthenticatedRoute(), item.DeleteItemImage)
 	itemsTxRouteGroup.DELETE("/:itemId/images", middleware.AuthenticatedRoute(), item.DeleteItemImages)
+	itemsTxRouteGroup.GET("/:itemId/images/:imageId", item.GetItemImage)
 
 	itemsTxRouteGroup.PUT("/:itemId/mark-off-bid", middleware.AuthenticatedRoute(), item.MarkItemOffBid)
 	itemsTxRouteGroup.POST("/:itemId/bid", middleware.AuthenticatedRoute(), item.PlaceBidOnItem)

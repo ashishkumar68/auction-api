@@ -14,6 +14,7 @@ const (
 
 var (
 	MaxItemImagesReachedErr = fmt.Errorf("allowed max item images count: %d exceeded", MaxImagesPerItem)
+	ItemImageNotFoundErr    = fmt.Errorf("item image was not found")
 )
 
 type ItemImage struct {

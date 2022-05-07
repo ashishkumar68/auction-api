@@ -19,6 +19,7 @@ var (
 	CouldNotSaveImage             = "Could not save image"
 	InvalidRemoveExistingVal      = "Invalid removeExisting value was found."
 	InvalidImageIdFoundErr        = "Invalid image id value was found."
+	ItemImageNotFoundError        = "Item image was not found."
 )
 
 func IndexAction(c *gin.Context) {

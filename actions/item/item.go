@@ -236,3 +236,38 @@ func DeleteItemImages(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, nil)
 }
+
+func GetItemImage(c *gin.Context) {
+	itemId, err := strconv.Atoi(c.Param("itemId"))
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not find item image due to err: %s", err.Error()))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
+		return
+	}
+	db := actions.GetDBConnectionByContext(c)
+	repository := repositories.NewRepository(db)
+	imageId, err := strconv.Atoi(c.Param("imageId"))
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not delete item image due to err: %s", err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidImageIdFoundErr})
+		return
+	}
+	itemImg := repository.FindItemImage(uint(imageId), uint(itemId))
+	if itemImg == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": actions.ItemImageNotFoundError})
+		return
+	}
+	itemService := services.NewItemService(db)
+	fileName, filePath, err := itemService.GetItemImage(c, itemImg)
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not find item image due to err: %s", err.Error()))
+		c.JSON(http.StatusNotFound, gin.H{"error": models.ItemImageNotFoundErr.Error()})
+		return
+	}
+
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Disposition", "attachment; filename="+fileName)
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Header("Cache-Control", "no-cache")
+	c.File(filePath)
+}

@@ -784,14 +784,32 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 	assert.Nil(suite.T(), err)
 
 	countThumbnail := 0
+	var thumbnail *models.ItemImage
 	item = suite.repository.FindItemById(1)
 	assert.NotNil(suite.T(), item.ItemImages)
 	assert.Len(suite.T(), item.ItemImages, models.MaxImagesPerItem)
 	for _, itemImg := range item.ItemImages {
 		if itemImg.IsThumbnail {
 			countThumbnail += 1
+			thumbnail = itemImg
 		}
 	}
 
 	assert.Equal(suite.T(), 1, countThumbnail)
+	// fetch file.
+	resp, err = client.MakeRequest(
+		fmt.Sprintf("%s://%s:%s%s/items/%d/images/%d", suite.protocol, suite.host, suite.port, suite.apiBaseRoute, item.ID, thumbnail.ID),
+		"GET",
+		map[string]string{},
+		map[string]string{"Authorization": suite.loggedInToken},
+		time.Second*10,
+		payload,
+	)
+
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+	assert.Equal(suite.T(), "application/octet-stream", resp.Header.Get("Content-Type"))
+	assert.Equal(suite.T(), fmt.Sprintf("attachment; filename=%s", thumbnail.Name), resp.Header.Get("Content-Disposition"))
+	assert.Equal(suite.T(), "binary", resp.Header.Get("Content-Transfer-Encoding"))
+	assert.Equal(suite.T(), "no-cache", resp.Header.Get("Cache-Control"))
 }
