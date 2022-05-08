@@ -33,7 +33,7 @@ type Item struct {
 	OffBid      bool         `gorm:"column:off_bid;type:tinyint(1);not null;default:0" json:"isOffBid"`
 
 	Bids       []Bid
-	ItemImages []*ItemImage
+	ItemImages []*ItemImage `json:"itemImages"`
 }
 
 func (Item) TableName() string {

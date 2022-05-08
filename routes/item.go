@@ -19,6 +19,7 @@ func MapItemRoutes(itemsGroup *gin.RouterGroup) {
 
 	itemsTxRouteGroup.PUT("/:itemId/mark-off-bid", middleware.AuthenticatedRoute(), item.MarkItemOffBid)
 	itemsTxRouteGroup.POST("/:itemId/bid", middleware.AuthenticatedRoute(), item.PlaceBidOnItem)
+	itemsTxRouteGroup.GET("/:itemId/bids", item.ListItemBids)
 
 	itemsTxRouteGroup.POST("/:itemId/reaction", middleware.AuthenticatedRoute(), item.AddReactionToItem)
 	itemsTxRouteGroup.DELETE("/:itemId/reaction", middleware.AuthenticatedRoute(), item.RemoveItemReaction)
@@ -26,4 +27,5 @@ func MapItemRoutes(itemsGroup *gin.RouterGroup) {
 	itemsTxRouteGroup.POST("/:itemId/comment", middleware.AuthenticatedRoute(), item.AddItemComment)
 	itemsTxRouteGroup.PATCH("/:itemId/comment/:commentId", middleware.AuthenticatedRoute(), item.UpdateItemComment)
 	itemsTxRouteGroup.DELETE("/:itemId/comment/:commentId", middleware.AuthenticatedRoute(), item.DeleteItemComment)
+	itemsTxRouteGroup.GET("/:itemId/comments", item.ListItemComments)
 }

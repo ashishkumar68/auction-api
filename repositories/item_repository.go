@@ -63,15 +63,19 @@ func (repo *Repository) FindItemByName(name string) []models.Item {
 
 func (repo *Repository) ListItems() *gorm.DB {
 	return repo.connection.
+		Preload("ItemImages").
 		Joins("UserCreated").
 		Joins("UserUpdated").
+		Joins("LEFT JOIN item_images ON item_images.item_id = items.id AND item_images.is_thumbnail = 1").
 		Model(&models.Item{})
 }
 
 func (repo *Repository) ListUserItems(user *models.User) *gorm.DB {
 	return repo.connection.
 		Model(&models.Item{}).
+		Preload("ItemImages").
 		Joins("UserCreated").
+		Joins("LEFT JOIN item_images ON item_images.item_id = items.id AND item_images.is_thumbnail = 1").
 		Where("items.created_by = ?", user.ID).
 		Order("items.id DESC")
 }

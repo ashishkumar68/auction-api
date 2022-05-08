@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"github.com/ashishkumar68/auction-api/models"
+	"gorm.io/gorm"
 	"log"
 )
 
@@ -70,4 +71,13 @@ func (repo *Repository) CountCommentsByItem(item *models.Item) uint {
 		Scan(&count)
 
 	return count
+}
+
+func (repo *Repository) FindCommentsByItem(item *models.Item) *gorm.DB {
+	return repo.connection.
+		Model(&models.ItemComment{}).
+		Preload("UserCreated").
+		Joins("Item").
+		Where("Item.id = ?", item.ID).
+		Order("item_comments.id DESC")
 }

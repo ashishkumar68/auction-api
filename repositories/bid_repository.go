@@ -3,6 +3,7 @@ package repositories
 import (
 	"fmt"
 	"github.com/ashishkumar68/auction-api/models"
+	"gorm.io/gorm"
 	"log"
 )
 
@@ -64,4 +65,13 @@ func (repo *Repository) FindBidByItem(item *models.Item, user *models.User) *mod
 	}
 
 	return &bid
+}
+
+func (repo *Repository) FindBidsByItem(item *models.Item) *gorm.DB {
+	return repo.connection.
+		Model(&models.Bid{}).
+		Preload("UserCreated").
+		Joins("Item").
+		Where("Item.id = ?", item.ID).
+		Order("bids.id DESC")
 }
