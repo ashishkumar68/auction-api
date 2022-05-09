@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"database/sql"
 	"github.com/ashishkumar68/auction-api/models"
 	"log"
 )
@@ -48,4 +49,35 @@ func (repo *Repository) DeleteReaction(reaction *models.Reaction) error {
 	}
 
 	return nil
+}
+
+// FindReactionsCountByItems returns item reactions mapped by item id.
+func (repo *Repository) FindReactionsCountByItems(items []*models.Item) map[uint][]models.ItemReactionTypeCount {
+	itemIds := make([]uint, 0)
+	for _, item := range items {
+		itemIds = append(itemIds, item.ID)
+	}
+
+	var itemReactionsCount []models.ItemReactionTypeCount
+	repo.connection.Raw(`
+SELECT i.id as item_id, r.type as reaction_type, count(r.id) as reaction_count
+FROM items i
+JOIN reactions r ON r.item_id = i.id
+WHERE i.id IN @ids
+GROUP BY i.id, r.type
+ORDER BY i.id ASC
+;
+`, sql.Named("ids", itemIds)).Scan(&itemReactionsCount)
+
+	itemReactionsMap := make(map[uint][]models.ItemReactionTypeCount)
+	for _, itemReactionCount := range itemReactionsCount {
+		itemReactionCount.ReactionTypeText = models.FindReactionTypeString(itemReactionCount.ReactionType)
+		if itemReactions, ok := itemReactionsMap[itemReactionCount.ItemId]; ok {
+			itemReactionsMap[itemReactionCount.ItemId] = append(itemReactions, itemReactionCount)
+		} else {
+			itemReactionsMap[itemReactionCount.ItemId] = []models.ItemReactionTypeCount{itemReactionCount}
+		}
+	}
+
+	return itemReactionsMap
 }

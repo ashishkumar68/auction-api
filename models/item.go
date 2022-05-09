@@ -13,6 +13,13 @@ const (
 	CategoryArtInt
 )
 
+const (
+	ItemCategoryElectronicsString = "Electronics"
+	ItemCategoryAppliancesString  = "Appliances"
+	ItemCategoryHomeString        = "Home"
+	ItemCategoryArtString         = "Art"
+)
+
 var (
 	EmptyItemBidUserError   = fmt.Errorf("placing item bid requires a user but was found empty")
 	DetectedPastLastBidDate = fmt.Errorf("can not set last bid date in the past")
@@ -33,7 +40,8 @@ type Item struct {
 	OffBid      bool         `gorm:"column:off_bid;type:tinyint(1);not null;default:0" json:"isOffBid"`
 
 	Bids       []Bid
-	ItemImages []*ItemImage `json:"itemImages"`
+	ItemImages []*ItemImage            `json:"itemImages"`
+	Reactions  []ItemReactionTypeCount `gorm:"-" json:"reactions"`
 }
 
 func (Item) TableName() string {
@@ -183,4 +191,27 @@ func (item *Item) RemoveImage(img *ItemImage) *Item {
 	item.ItemImages = append(item.ItemImages[:deleteImgIndex], item.ItemImages[deleteImgIndex+1:]...)
 
 	return item
+}
+
+type ItemReactionTypeCount struct {
+	ItemId           uint   `gorm:"column:item_id" json:"-"`
+	ReactionType     uint8  `gorm:"column:reaction_type" json:"reactionType"`
+	ReactionCount    uint   `gorm:"column:reaction_count" json:"reactionCount"`
+	ReactionTypeText string `gorm:"-" json:"reactionTypeText"`
+}
+
+func GetItemCategoryString(itemCategory ItemCategory) string {
+	var category string
+	switch itemCategory {
+	case CategoryElectronicsInt:
+		category = ItemCategoryElectronicsString
+	case CategoryAppliancesInt:
+		category = ItemCategoryAppliancesString
+	case CategoryHomeInt:
+		category = ItemCategoryHomeString
+	case CategoryArtInt:
+		category = ItemCategoryArtString
+	}
+
+	return category
 }

@@ -39,7 +39,18 @@ func ListItems(c *gin.Context) {
 	db := actions.GetDBConnectionByContext(c)
 	repository := repositories.NewRepository(db)
 
-	c.JSON(http.StatusOK, pg.With(repository.ListItems()).Request(c.Request).Response(&[]models.Item{}))
+	var items []*models.Item
+	page := pg.With(repository.ListItems()).Request(c.Request).Response(&items)
+	itemReactionMap := repository.FindReactionsCountByItems(items)
+	log.Println("item reactions are: ", itemReactionMap)
+	for _, item := range items {
+		if itemReactions, ok := itemReactionMap[item.ID]; ok {
+			item.Reactions = itemReactions
+		}
+		log.Println("Item:", *item)
+	}
+
+	c.JSON(http.StatusOK, page)
 }
 
 func EditItem(c *gin.Context) {

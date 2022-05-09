@@ -86,14 +86,55 @@ func (suite *ItemTestSuite) TestAllowAddItemAsLoggedInUser() {
 func (suite *ItemTestSuite) TestListItemsAnonymously() {
 	itemsRoute := fmt.Sprintf("%s://%s:%s%s/items", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
 	suite.DB.Exec(`
+INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email, password, is_active) VALUES 
+(6, uuid_v4(), NOW(), NOW(), "John", "Doe", "johndoe25@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1),
+(7, uuid_v4(), NOW(), NOW(), "John", "Doe", "johndoe26@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1),
+(8, uuid_v4(), NOW(), NOW(), "John", "Doe", "johndoe27@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6", 1)
+;
+`)
+	suite.DB.Exec(`
 INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
 (1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
 (2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01")
 ;
 `)
+	suite.DB.Exec(`
+INSERT INTO reactions (uuid,created_at,updated_at,deleted_at,version,created_by,updated_by,deleted_by,item_id,type) VALUES 
+(uuid_v4(), NOW(), NOW(), NULL, 1, 5, 5, NULL, 1, 0),
+(uuid_v4(), NOW(), NOW(), NULL, 1, 5, 5, NULL, 2, 1),
+(uuid_v4(), NOW(), NOW(), NULL, 1, 6, 6, NULL, 1, 0),
+(uuid_v4(), NOW(), NOW(), NULL, 1, 6, 6, NULL, 2, 1),
+(uuid_v4(), NOW(), NOW(), NULL, 1, 7, 7, NULL, 1, 1),
+(uuid_v4(), NOW(), NOW(), NULL, 1, 7, 7, NULL, 2, 0),
+(uuid_v4(), NOW(), NOW(), NULL, 1, 8, 8, NULL, 1, 1),
+(uuid_v4(), NOW(), NOW(), NULL, 1, 8, 8, NULL, 2, 0)
+;
+`)
 
-	items := suite.repository.FindItemByName("ABC Item")
-	assert.Len(suite.T(), items, 2)
+	item1 := suite.repository.FindItemById(1)
+	item2 := suite.repository.FindItemById(2)
+	assert.NotNil(suite.T(), item1)
+	assert.NotNil(suite.T(), item2)
+	itemReactionsMap := suite.repository.FindReactionsCountByItems([]*models.Item{item1, item2})
+	assert.Len(suite.T(), itemReactionsMap, 2)
+	assert.NotNil(suite.T(), itemReactionsMap[1])
+	assert.NotNil(suite.T(), itemReactionsMap[2])
+	for itemId, reactions := range itemReactionsMap {
+		assert.Equal(suite.T(), []models.ItemReactionTypeCount{
+			{
+				ItemId:           itemId,
+				ReactionType:     models.ReactionTypeLike,
+				ReactionCount:    2,
+				ReactionTypeText: models.ReactionTypeLikeString,
+			},
+			{
+				ItemId:           itemId,
+				ReactionType:     models.ReactionTypeDislike,
+				ReactionCount:    2,
+				ReactionTypeText: models.ReactionTypeDislikeString,
+			},
+		}, reactions)
+	}
 
 	resp, err := client.MakeRequest(
 		itemsRoute,
@@ -108,6 +149,7 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 	assert.NotNil(suite.T(), resp, "Could not detect service available.")
 
 	var page paginate.Page
+	var items []models.Item
 	responseBytes, err := io.ReadAll(resp.Body)
 	assert.Nil(suite.T(), err, "Could not read from response message body.")
 	err = json.Unmarshal(responseBytes, &page)
@@ -119,6 +161,30 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 	assert.Len(suite.T(), items, 2)
 	assert.Contains(suite.T(), items[0].Name, "ABC Item")
 	assert.Contains(suite.T(), items[1].Name, "ABC Item")
+	assert.NotNil(suite.T(), items[0].Reactions)
+	assert.Equal(suite.T(), []models.ItemReactionTypeCount{
+		{
+			ReactionType:     models.ReactionTypeLike,
+			ReactionCount:    2,
+			ReactionTypeText: models.ReactionTypeLikeString,
+		},
+		{
+			ReactionType:     models.ReactionTypeDislike,
+			ReactionCount:    2,
+			ReactionTypeText: models.ReactionTypeDislikeString,
+		}}, items[0].Reactions)
+	assert.NotNil(suite.T(), items[1].Reactions)
+	assert.Equal(suite.T(), []models.ItemReactionTypeCount{
+		{
+			ReactionType:     models.ReactionTypeLike,
+			ReactionCount:    2,
+			ReactionTypeText: models.ReactionTypeLikeString,
+		},
+		{
+			ReactionType:     models.ReactionTypeDislike,
+			ReactionCount:    2,
+			ReactionTypeText: models.ReactionTypeDislikeString,
+		}}, items[1].Reactions)
 }
 
 func (suite *ItemTestSuite) TestListItemsAsLoggedInUser() {

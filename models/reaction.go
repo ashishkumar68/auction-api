@@ -5,6 +5,11 @@ const (
 	ReactionTypeDislike
 )
 
+const (
+	ReactionTypeLikeString    = "Like"
+	ReactionTypeDislikeString = "Dislike"
+)
+
 type Reaction struct {
 	IdentityAuditableModel
 
@@ -34,4 +39,16 @@ func (r Reaction) IsTypeSameAs(reaction Reaction) bool {
 	}
 
 	return false
+}
+
+func FindReactionTypeString(reactionType uint8) string {
+	var rType string
+	switch reactionType {
+	case ReactionTypeLike:
+		rType = ReactionTypeLikeString
+	case ReactionTypeDislike:
+		rType = ReactionTypeDislikeString
+	}
+
+	return rType
 }
