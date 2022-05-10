@@ -30,11 +30,12 @@ ENV AIR_FILE_NAME ${AIR_FILE_NAME}
 RUN mkdir -p ${GOPATH}/bin/
 RUN mkdir -p ${GOPATH}/pkg/
 RUN mkdir -p ${GOPATH}/src/
-# install wire
+# install wire and other commands.
 RUN go install github.com/google/wire/cmd/wire@latest
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 RUN go install github.com/cosmtrek/air@latest
 RUN go install github.com/spf13/cobra-cli@latest
+RUN go install github.com/ashishkumar68/auction-api/auction-cli@latest
 
 EXPOSE 8081
 
