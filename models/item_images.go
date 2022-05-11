@@ -13,8 +13,9 @@ const (
 )
 
 var (
-	MaxItemImagesReachedErr = fmt.Errorf("allowed max item images count: %d exceeded", MaxImagesPerItem)
-	ItemImageNotFoundErr    = fmt.Errorf("item image was not found")
+	MaxItemImagesReachedErr  = fmt.Errorf("allowed max item images count: %d exceeded", MaxImagesPerItem)
+	ItemImageNotFoundErr     = fmt.Errorf("item image was not found")
+	ItemThumbnailNotFoundErr = fmt.Errorf("item thumbnail not found")
 )
 
 type ItemImage struct {
@@ -25,7 +26,7 @@ type ItemImage struct {
 	Item             *Item                 `gorm:"foreignKey:ItemId" json:"item"`
 	MultiPartImgFile *multipart.FileHeader `gorm:"-" json:"-"`
 	Name             string                `gorm:"column:name;not null" json:"name"`
-	IsThumbnail      bool                  `gorm:"column:is_thumbnail;not null;default:0" json:"isThumbnail"`
+	IsThumbnail      bool                  `gorm:"column:is_thumbnail;type:tinyint(1);not null;default:0" json:"isThumbnail"`
 }
 
 func (ItemImage) TableName() string {

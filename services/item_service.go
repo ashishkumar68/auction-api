@@ -292,14 +292,17 @@ func (service *ItemServiceImplementor) MarkItemImageThumbnail(
 	}
 
 	currentThumbnail := service.repository.FindItemThumbnail(form.ItemImg.Item)
-	currentThumbnail.IsThumbnail = false
 	form.ItemImg.IsThumbnail = true
 	err := service.repository.Transaction(func(trx *gorm.DB) error {
-		updateErr := service.repository.Update(currentThumbnail)
-		if updateErr != nil {
-			return updateErr
+		if currentThumbnail != nil {
+			updateErr := service.repository.UpdatesWithMap(currentThumbnail, map[string]interface{}{
+				"is_thumbnail": false, "updated_by": form.ActionUser.ID,
+			})
+			if updateErr != nil {
+				return updateErr
+			}
 		}
-		updateErr = service.repository.Update(form.ItemImg)
+		updateErr := service.repository.Update(form.ItemImg)
 		if updateErr != nil {
 			return updateErr
 		}
@@ -321,8 +324,12 @@ func (service *ItemServiceImplementor) RemoveItemImageThumbnail(
 		return ItemNotOwnedByActionUser
 	}
 	currentThumbnail := service.repository.FindItemThumbnail(form.Item)
-	currentThumbnail.IsThumbnail = false
-	err := service.repository.Update(currentThumbnail)
+	if currentThumbnail == nil {
+		return models.ItemThumbnailNotFoundErr
+	}
+	err := service.repository.UpdatesWithMap(currentThumbnail, map[string]interface{}{
+		"is_thumbnail": false, "updated_by": form.ActionUser.ID,
+	})
 	if err != nil {
 		log.Println("could not unmark/remove item image thumbnail due to error:", err.Error())
 		return err

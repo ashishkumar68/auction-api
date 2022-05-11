@@ -942,3 +942,123 @@ INSERT INTO bids (id, uuid, created_at, updated_at, deleted_at, version, created
 	assert.Equal(suite.T(), bids[1].Value, models.Value(21000))
 	assert.Equal(suite.T(), bids[1].UserCreatedBy, user6.ID)
 }
+
+func (suite *ItemTestSuite) TestMarkItemImageThumbnailByAuthor() {
+	suite.DB.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
+(1, "581b7c3c-3fa8-4642-801b-30f63111f621",'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01");
+`)
+	suite.DB.Exec(`
+INSERT INTO item_images (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, path, item_id, is_thumbnail) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'guitar_2_abc.jpg',"items/581b7c3c-3fa8-4642-801b-30f63111f621/images/guitar_2_abc.jpg", 1, 1),
+(2, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'guitar_1_abc.jpg',"items/581b7c3c-3fa8-4642-801b-30f63111f621/images/guitar_1_abc.jpg", 1, 0)
+;
+`)
+
+	item := suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+	assert.True(suite.T(), item.IsOwner(*suite.actionUser))
+
+	itemImages := suite.repository.FindItemImages(item)
+	assert.NotNil(suite.T(), itemImages)
+	assert.Len(suite.T(), itemImages, 2)
+	assert.True(suite.T(), itemImages[0].IsThumbnail)
+	assert.Equal(suite.T(), uint(1), itemImages[0].ID)
+	assert.False(suite.T(), itemImages[1].IsThumbnail)
+	assert.Equal(suite.T(), uint(2), itemImages[1].ID)
+
+	image1Bytes, err := io.ReadAll(suite.itemImageFile1)
+	assert.Nil(suite.T(), err)
+	dirPath := fmt.Sprintf("%s/items/%s/images", utils.GetGlobalUploadsDir(), item.Uuid)
+	err = os.MkdirAll(dirPath, 0755)
+	assert.Nil(suite.T(), err)
+	image2Bytes, err := io.ReadAll(suite.itemImageFile2)
+	assert.Nil(suite.T(), err)
+
+	file1Path := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), itemImages[0].Path)
+	err = os.WriteFile(file1Path, image1Bytes, 0755)
+	assert.Nil(suite.T(), err)
+	file2Path := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), itemImages[1].Path)
+	err = os.WriteFile(file2Path, image2Bytes, 0755)
+	assert.Nil(suite.T(), err)
+
+	resp, err := client.MakeRequest(
+		fmt.Sprintf("%s/%d/images/%d/make-thumbnail", suite.itemsRoute, item.ID, itemImages[1].ID),
+		"PATCH",
+		map[string]string{},
+		map[string]string{"Authorization": suite.loggedInToken, "Content-Type": suite.contentTypeJson},
+		time.Second*10,
+		nil,
+	)
+	defer resp.Body.Close()
+
+	assert.Equal(suite.T(), http.StatusNoContent, resp.StatusCode)
+
+	itemImages = suite.repository.FindItemImages(item)
+	assert.Len(suite.T(), itemImages, 2)
+	assert.False(suite.T(), itemImages[0].IsThumbnail)
+	assert.Equal(suite.T(), uint(1), itemImages[0].ID)
+	assert.True(suite.T(), itemImages[1].IsThumbnail)
+	assert.Equal(suite.T(), uint(2), itemImages[1].ID)
+}
+
+func (suite *ItemTestSuite) TestRemoveItemImageThumbnailByAuthor() {
+	suite.DB.Exec(`
+INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
+(1, "581b7c3c-3fa8-4642-801b-30f63111f621",'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
+(2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01");
+`)
+	suite.DB.Exec(`
+INSERT INTO item_images (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, path, item_id, is_thumbnail) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'guitar_2_abc.jpg',"items/581b7c3c-3fa8-4642-801b-30f63111f621/images/guitar_2_abc.jpg", 1, 1),
+(2, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'guitar_1_abc.jpg',"items/581b7c3c-3fa8-4642-801b-30f63111f621/images/guitar_1_abc.jpg", 1, 0)
+;
+`)
+
+	item := suite.repository.FindItemById(1)
+	assert.NotNil(suite.T(), item)
+	assert.True(suite.T(), item.IsOwner(*suite.actionUser))
+
+	itemImages := suite.repository.FindItemImages(item)
+	assert.NotNil(suite.T(), itemImages)
+	assert.Len(suite.T(), itemImages, 2)
+	assert.True(suite.T(), itemImages[0].IsThumbnail)
+	assert.Equal(suite.T(), uint(1), itemImages[0].ID)
+	assert.False(suite.T(), itemImages[1].IsThumbnail)
+	assert.Equal(suite.T(), uint(2), itemImages[1].ID)
+
+	image1Bytes, err := io.ReadAll(suite.itemImageFile1)
+	assert.Nil(suite.T(), err)
+	dirPath := fmt.Sprintf("%s/items/%s/images", utils.GetGlobalUploadsDir(), item.Uuid)
+	err = os.MkdirAll(dirPath, 0755)
+	assert.Nil(suite.T(), err)
+	image2Bytes, err := io.ReadAll(suite.itemImageFile2)
+	assert.Nil(suite.T(), err)
+
+	file1Path := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), itemImages[0].Path)
+	err = os.WriteFile(file1Path, image1Bytes, 0755)
+	assert.Nil(suite.T(), err)
+	file2Path := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), itemImages[1].Path)
+	err = os.WriteFile(file2Path, image2Bytes, 0755)
+	assert.Nil(suite.T(), err)
+
+	resp, err := client.MakeRequest(
+		fmt.Sprintf("%s/%d/images/remove-thumbnail", suite.itemsRoute, item.ID),
+		"DELETE",
+		map[string]string{},
+		map[string]string{"Authorization": suite.loggedInToken, "Content-Type": suite.contentTypeJson},
+		time.Second*10,
+		nil,
+	)
+	defer resp.Body.Close()
+
+	assert.Equal(suite.T(), http.StatusNoContent, resp.StatusCode)
+
+	itemImages = suite.repository.FindItemImages(item)
+	assert.Len(suite.T(), itemImages, 2)
+	assert.False(suite.T(), itemImages[0].IsThumbnail)
+	assert.Equal(suite.T(), uint(1), itemImages[0].ID)
+	assert.False(suite.T(), itemImages[1].IsThumbnail)
+	assert.Equal(suite.T(), uint(2), itemImages[1].ID)
+}

@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"log"
 )
 
@@ -35,7 +36,17 @@ func (repo *Repository) Save(val any) error {
 }
 
 func (repo *Repository) Update(val any) error {
-	result := repo.connection.Updates(val)
+	result := repo.connection.Omit(clause.Associations).Updates(val)
+	if result.Error != nil {
+		log.Printf("could not update %T value to database due to error: %s", val, result.Error)
+		return result.Error
+	}
+
+	return nil
+}
+
+func (repo *Repository) UpdatesWithMap(val any, updatesMap map[string]interface{}) error {
+	result := repo.connection.Model(val).Omit(clause.Associations).Updates(updatesMap)
 	if result.Error != nil {
 		log.Printf("could not update %T value to database due to error: %s", val, result.Error)
 		return result.Error
