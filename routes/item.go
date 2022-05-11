@@ -14,6 +14,8 @@ func MapItemRoutes(itemsGroup *gin.RouterGroup) {
 	itemsTxRouteGroup.PATCH("/:itemId", middleware.AuthenticatedRoute(), item.EditItem)
 	itemsTxRouteGroup.POST("/:itemId/images", middleware.AuthenticatedRoute(), item.AddItemImages)
 	itemsTxRouteGroup.DELETE("/:itemId/images/:imageId", middleware.AuthenticatedRoute(), item.DeleteItemImage)
+	itemsTxRouteGroup.PATCH("/:itemId/images/:imageId/make-thumbnail", middleware.AuthenticatedRoute(), item.MakeItemImageThumbnail)
+	itemsTxRouteGroup.DELETE("/:itemId/images/remove-thumbnail", middleware.AuthenticatedRoute(), item.RemoveItemImageThumbnail)
 	itemsTxRouteGroup.DELETE("/:itemId/images", middleware.AuthenticatedRoute(), item.DeleteItemImages)
 	itemsTxRouteGroup.GET("/:itemId/images/:imageId", item.GetItemImage)
 

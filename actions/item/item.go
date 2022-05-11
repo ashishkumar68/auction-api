@@ -282,3 +282,76 @@ func GetItemImage(c *gin.Context) {
 	c.Header("Cache-Control", "no-cache")
 	c.File(filePath)
 }
+
+func MakeItemImageThumbnail(c *gin.Context) {
+	itemId, err := strconv.Atoi(c.Param("itemId"))
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not mark item image thubmnail due to err: %s", err.Error()))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
+		return
+	}
+	db := actions.GetDBConnectionByContext(c)
+	repository := repositories.NewRepository(db)
+	imageId, err := strconv.Atoi(c.Param("imageId"))
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not mark item image thumbnail due to err: %s", err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidImageIdFoundErr})
+		return
+	}
+	itemImg := repository.FindItemImage(uint(imageId), uint(itemId))
+	if itemImg == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": actions.ItemImageNotFoundError})
+		return
+	}
+	var form forms.MarkItemImageThumbnailForm
+	form.ActionUser = actions.GetActionUserByContext(c)
+	form.ItemImg = itemImg
+
+	itemService := services.NewItemService(db)
+	err = itemService.MarkItemImageThumbnail(c, form)
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not mark item image thumbnail due to err: %s", err))
+		if err == services.ItemNotOwnedByActionUser {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": actions.InternalServerErrMsg})
+		}
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
+
+func RemoveItemImageThumbnail(c *gin.Context) {
+	itemId, err := strconv.Atoi(c.Param("itemId"))
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not remove item image thubmnail due to err: %s", err.Error()))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
+		return
+	}
+	db := actions.GetDBConnectionByContext(c)
+	repository := repositories.NewRepository(db)
+	item := repository.FindItemById(uint(itemId))
+	if item == nil {
+		log.Println(fmt.Sprintf("Could not remove item image thumbnail due to err: %s", err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": actions.InvalidItemIdReceivedErr})
+		return
+	}
+	var form forms.RemoveItemThumbnailForm
+	form.ActionUser = actions.GetActionUserByContext(c)
+	form.Item = item
+
+	itemService := services.NewItemService(db)
+	err = itemService.RemoveItemImageThumbnail(c, form)
+	if err != nil {
+		log.Println(fmt.Sprintf("Could not remove item images due to err: %s", err))
+		if err == services.ItemNotOwnedByActionUser {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": actions.InternalServerErrMsg})
+		}
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}

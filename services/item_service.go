@@ -29,10 +29,31 @@ type ItemService interface {
 	RemoveItemImage(ctx context.Context, form forms.RemoveItemImageForm) error
 	RemoveItemImages(ctx context.Context, form forms.RemoveItemImagesForm) error
 	GetItemImage(ctx context.Context, itemImg *models.ItemImage) (fileName string, filePath string, err error)
+	MarkItemImageThumbnail(ctx context.Context, form forms.MarkItemImageThumbnailForm) error
+	RemoveItemImageThumbnail(ctx context.Context, form forms.RemoveItemThumbnailForm) error
 }
 
 type ItemServiceImplementor struct {
 	repository *repositories.Repository
+}
+
+func initItemService(repository *repositories.Repository) ItemService {
+	itemService := &ItemServiceImplementor{
+		repository: repository,
+	}
+
+	return itemService
+}
+
+func (service *ItemServiceImplementor) DeleteFSItemImages(item *models.Item) error {
+	itemDir := fmt.Sprintf("%s/items/%s", utils.GetGlobalUploadsDir(), item.Uuid)
+
+	return os.RemoveAll(itemDir)
+}
+
+func (service *ItemServiceImplementor) DeleteFSItemImage(image *models.ItemImage) error {
+	itemImagePath := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), image.Path)
+	return os.Remove(itemImagePath)
 }
 
 func (service *ItemServiceImplementor) AddNew(_ context.Context, form forms.AddNewItemForm) (*models.Item, error) {
@@ -262,21 +283,50 @@ func (service *ItemServiceImplementor) GetItemImage(_ context.Context, itemImg *
 	return itemImg.Name, filePath, nil
 }
 
-func initItemService(repository *repositories.Repository) ItemService {
-	itemService := &ItemServiceImplementor{
-		repository: repository,
+func (service *ItemServiceImplementor) MarkItemImageThumbnail(
+	_ context.Context,
+	form forms.MarkItemImageThumbnailForm,
+) error {
+	if !form.ItemImg.Item.IsOwner(*form.ActionUser) {
+		return ItemNotOwnedByActionUser
 	}
 
-	return itemService
+	currentThumbnail := service.repository.FindItemThumbnail(form.ItemImg.Item)
+	currentThumbnail.IsThumbnail = false
+	form.ItemImg.IsThumbnail = true
+	err := service.repository.Transaction(func(trx *gorm.DB) error {
+		updateErr := service.repository.Update(currentThumbnail)
+		if updateErr != nil {
+			return updateErr
+		}
+		updateErr = service.repository.Update(form.ItemImg)
+		if updateErr != nil {
+			return updateErr
+		}
+		return nil
+	})
+	if err != nil {
+		log.Println("could not mark item image thumbnail due to error:", err.Error())
+		return err
+	}
+
+	return nil
 }
 
-func (service *ItemServiceImplementor) DeleteFSItemImages(item *models.Item) error {
-	itemDir := fmt.Sprintf("%s/items/%s", utils.GetGlobalUploadsDir(), item.Uuid)
+func (service *ItemServiceImplementor) RemoveItemImageThumbnail(
+	_ context.Context,
+	form forms.RemoveItemThumbnailForm,
+) error {
+	if !form.Item.IsOwner(*form.ActionUser) {
+		return ItemNotOwnedByActionUser
+	}
+	currentThumbnail := service.repository.FindItemThumbnail(form.Item)
+	currentThumbnail.IsThumbnail = false
+	err := service.repository.Update(currentThumbnail)
+	if err != nil {
+		log.Println("could not unmark/remove item image thumbnail due to error:", err.Error())
+		return err
+	}
 
-	return os.RemoveAll(itemDir)
-}
-
-func (service *ItemServiceImplementor) DeleteFSItemImage(image *models.ItemImage) error {
-	itemImagePath := fmt.Sprintf("%s/%s", utils.GetGlobalUploadsDir(), image.Path)
-	return os.Remove(itemImagePath)
+	return nil
 }

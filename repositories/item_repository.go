@@ -118,3 +118,17 @@ func (repo *Repository) FindItemImage(imageId uint, itemId uint) *models.ItemIma
 
 	return &image
 }
+
+func (repo *Repository) FindItemThumbnail(item *models.Item) *models.ItemImage {
+	var image models.ItemImage
+	repo.connection.
+		Joins("LEFT JOIN item_images ON item_images.item_id = items.id").
+		Where("item_images.is_thumbnail = 1 AND items.id = ?", item.ID).
+		Find(&image)
+
+	if image.IsZero() {
+		return nil
+	}
+
+	return &image
+}
