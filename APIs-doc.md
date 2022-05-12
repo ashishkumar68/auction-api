@@ -171,6 +171,9 @@ HTTP response status code: **201 Created**
 There are basic validations for images, it allows max 5 images upload and max image size can be 2 MBs.
 Only accepted file types at this point are **jpeg, png**
 
+**Thumbnail:** The first uploaded item image is automatically tagged as Thumbnail to show on items list.
+(there are APIs that allow editing this as well later in the document.)
+
 The list of images can also be overridden, by the use of `removeExisting=true` query param in this way while submitting:
 
 ```
@@ -308,3 +311,47 @@ HTTP response status code: **200 OK**
     "visible": 2
 }
 ```
+
+- `GET /api/items/:itemId/images/:imageId`
+
+This anonymous endpoint allows to fetch an item's image using **itemId** and **imageId**
+
+which should send back its corresponding image file back to response stream.
+
+- `PATCH  /api/items/:itemId`
+
+This authorized endpoint allows item authors to edit the item details. It accepts the following request payload:
+
+its same payload format as `POST /api/items` just with updated details.
+
+```
+{
+    "name": "Test Item 1",
+    "description": "Item's updated description goes here.",
+    "category": 0,
+    "brandName": "ABC Brand updated",
+    "marketValue": 110,
+    "lastBidDate": "2022-10-02T15:04:05Z"
+}
+```
+
+Which on success should return HTTP response status: **204 No Content** with empty response message body content.
+
+- `PUT /api/items/:itemId/mark-off-bid`
+
+once an item is added on platform, it can't be deleted but can be put off bid. which can be done using this above endpoint.
+Which can only be done by item's author. once an item is marked/ put off bid then other users won't be able to bid on this
+particular item.
+
+It doesn't take any request body content and on success it would return HTTP response status: **204 No Content** with empty response message body content.
+
+- `DELETE /api/items/:itemId/images` (limited to item's author)
+
+This endpoint allows deleting/clearing all images from an item. this endpoint doesn't take any request body content.
+On success, it should return HTTP response status: **204 No Content** with empty response message body content.
+
+- `DELETE /api/items/:itemId/images/:imageId` (limited to item's author)
+
+This endpoint allows deleting/clearing a particular image from an item. this endpoint doesn't take any request body content.
+On success, it should return HTTP response status: **204 No Content** with empty response message body content.
+
