@@ -136,7 +136,7 @@ HTTP response status code: **201 Created**
 }
 ```
 
-- `POST /api/items/:itemId/images`
+- `POST /api/items/:itemId/images` (limited to item's author)
 
 This endpoint allows to add images for an auction item. it accepts a multipart form-data content request with **images** param containing the list of item files.
 
@@ -318,7 +318,7 @@ This anonymous endpoint allows to fetch an item's image using **itemId** and **i
 
 which should send back its corresponding image file back to response stream.
 
-- `PATCH  /api/items/:itemId`
+- `PATCH  /api/items/:itemId` (limited to item's author)
 
 This authorized endpoint allows item authors to edit the item details. It accepts the following request payload:
 
@@ -337,7 +337,7 @@ its same payload format as `POST /api/items` just with updated details.
 
 Which on success should return HTTP response status: **204 No Content** with empty response message body content.
 
-- `PUT /api/items/:itemId/mark-off-bid`
+- `PUT /api/items/:itemId/mark-off-bid` (limited to item's author)
 
 once an item is added on platform, it can't be deleted but can be put off bid. which can be done using this above endpoint.
 Which can only be done by item's author. once an item is marked/ put off bid then other users won't be able to bid on this
@@ -354,4 +354,114 @@ On success, it should return HTTP response status: **204 No Content** with empty
 
 This endpoint allows deleting/clearing a particular image from an item. this endpoint doesn't take any request body content.
 On success, it should return HTTP response status: **204 No Content** with empty response message body content.
+
+- `PATCH /api/items/:itemId/images/:imageId/make-thumbnail` (limited to item's author)
+
+This endpoint allows marking an item's image thumbnail, it doesn't take any request body content and on success,
+it returns HTTP response status: **204 No Content** with empty response message body content.
+
+- `DELETE /api/items/:itemId/images/remove-thumbnail` (limited to item's author)
+
+This endpoint allows removing/unsetting an item's image thumbnail, it doesn't take any request body content and on success,
+it returns HTTP response status: **204 No Content** with empty response message body content.
+
+**Note:** It doesn't delete the existing item's thumbnail image just takes thumbnail tag off of it.
+
+- `POST /api/items/:itemId/bid`
+
+This endpoint allows other people(Non-Item authors) to put their bid on an item. this API can be used to add a new bid by a 
+user or update an existing bid placed by a user.
+
+This accepts the following request body content:
+
+```
+{
+    "bidValue": 12
+}
+```
+
+Which on successful operation should return the following sample response message:
+
+HTTP response status code: **201 Created**
+
+with body content:
+```
+{
+    "id": 1,
+    "uuid": "58cfd6f1-4034-4f85-b3c5-1f178575251d",
+    "createdAt": "2022-05-12T08:19:49.053Z",
+    "updatedAt": "2022-05-12T08:19:49.053Z",
+    "deletedAt": null,
+    "version": 1,
+    "item": null,
+    "bidValue": 12
+}
+```
+
+- `GET /api/items/:itemId/bids`
+
+This is an anonymous endpoint which allows anyone on the platform to see the list of bids for an item. It doesn't 
+require any request payload content.
+
+It returns the following sample response message:
+
+HTTP response status code: **200 OK**
+
+with body content:
+```
+{
+    "items": [
+        {
+            "id": 1,
+            "uuid": "58cfd6f1-4034-4f85-b3c5-1f178575251d",
+            "createdAt": "2022-05-12T08:19:49.053Z",
+            "updatedAt": "2022-05-12T08:19:49.053Z",
+            "deletedAt": null,
+            "version": 1,
+            "createdBy": {
+                "id": 2,
+                "uuid": "ffde17f1-603b-466d-9ba2-99440ac173fa",
+                "createdAt": "2022-05-12T08:19:09.962Z",
+                "updatedAt": "2022-05-12T08:19:09.962Z",
+                "deletedAt": null,
+                "version": 1,
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "johndoe24@abc.com",
+                "isActive": true,
+                "createdBy": null,
+                "updatedBy": null,
+                "deletedBy": null
+            },
+            "item": {
+                "id": 1,
+                "uuid": "44627618-c9a1-48e9-b027-a50d15ecf861",
+                "createdAt": "2022-05-12T06:57:20.663Z",
+                "updatedAt": "2022-05-12T07:52:29.06Z",
+                "deletedAt": null,
+                "version": 1,
+                "name": "Test Item 1",
+                "description": "Item's updated description goes here.",
+                "category": 0,
+                "brandName": "ABC Brand updated",
+                "marketValue": 110,
+                "lastBidDate": "2022-10-02T00:00:00Z",
+                "isOffBid": false,
+                "Bids": null,
+                "itemImages": null,
+                "reactions": null
+            },
+            "bidValue": 12
+        }
+    ],
+    "page": 0,
+    "size": 10,
+    "max_page": 1,
+    "total_pages": 1,
+    "total": 1,
+    "last": false,
+    "first": true,
+    "visible": 1
+}
+```
 
