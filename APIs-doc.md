@@ -553,3 +553,66 @@ body payload.
 
 on success, it should return, HTTP response status: **204 No Content** with empty response message body content.
 
+- `GET /api/items/:itemId/comments`
+
+This endpoint allows any anonymous/known user to fetch an item's comment. It doesn't require any
+request body payload.
+
+on success, it should return, HTTP response status: **200 OK** with following sample response body content.
+
+```
+{
+    "items": [
+        {
+            "id": 1,
+            "uuid": "da9f49ba-7d2c-4481-9b71-592e972b7249",
+            "createdAt": "2022-05-13T07:31:39.912Z",
+            "updatedAt": "2022-05-13T07:38:14.73Z",
+            "deletedAt": null,
+            "version": 1,
+            "createdBy": {
+                "id": 1,
+                "uuid": "b154902a-a8ce-4268-bbb2-a9e9670c05e5",
+                "createdAt": "2022-05-13T06:45:56.429Z",
+                "updatedAt": "2022-05-13T06:45:56.429Z",
+                "deletedAt": null,
+                "version": 1,
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "johndoe23@abc.com",
+                "isActive": true,
+                "createdBy": null,
+                "updatedBy": null,
+                "deletedBy": null
+            },
+            "description": "this is an updated test item comment.",
+            "item": {
+                "id": 1,
+                "uuid": "e3fce0be-c685-451b-a700-716463328ecf",
+                "createdAt": "2022-05-13T06:46:16.697Z",
+                "updatedAt": "2022-05-13T06:46:16.697Z",
+                "deletedAt": null,
+                "version": 1,
+                "name": "Test Item 1",
+                "description": "Item description goes here.",
+                "category": 0,
+                "brandName": "ABC Brand",
+                "marketValue": 100,
+                "lastBidDate": "2023-01-02T00:00:00Z",
+                "isOffBid": false,
+                "Bids": null,
+                "itemImages": null,
+                "reactions": null
+            }
+        }
+    ],
+    "page": 0,
+    "size": 10,
+    "max_page": 1,
+    "total_pages": 1,
+    "total": 1,
+    "last": false,
+    "first": true,
+    "visible": 1
+}
+```
