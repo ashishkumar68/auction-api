@@ -465,3 +465,91 @@ with body content:
 }
 ```
 
+- `POST /api/items/:itemId/reaction`
+
+This endpoint allows authenticated users to react to items (at this point it only supports Like and Dislike).
+
+It accepts the following request format:
+
+```
+{
+  "reactionType": 0
+}
+```
+
+`reactionType -> 0 (for Like reaction), reactionType -> 1 (for Dislike reaction)`
+
+on success, it should return following sample response format:
+
+HTTP response status code: **201 Created**
+
+```
+{
+    "id": 1,
+    "uuid": "dae06008-a928-4b28-8601-da373dc5b44d",
+    "createdAt": "2022-05-13T06:48:51.539Z",
+    "updatedAt": "2022-05-13T06:48:51.539Z",
+    "deletedAt": null,
+    "version": 1,
+    "item": null,
+    "type": 0
+}
+```
+
+The same endpoint can also be used to update existing reaction on item by a user.
+
+- `DELETE /api/items/:itemId/reaction`
+
+This endpoint can be used to delete an existing user's reaction from an item. This API doesn't require any request body payload.
+
+on success, it should return, HTTP response status: **204 No Content** with empty response message body content.
+
+- `POST /api/items/:itemId/comment`
+
+This endpoint allows authenticated users to add a comment on an Item. one user can add many comments on an item as well.
+
+It accepts the following request payload format:
+
+```
+{
+	"comment": "this is a test item comment."
+}
+```
+
+which on success, should return following sample response message:
+
+HTTP response status code: **201 Created**
+
+```
+{
+    "id": 1,
+    "uuid": "da9f49ba-7d2c-4481-9b71-592e972b7249",
+    "createdAt": "2022-05-13T07:31:39.912Z",
+    "updatedAt": "2022-05-13T07:31:39.912Z",
+    "deletedAt": null,
+    "version": 1,
+    "description": "this is a test item comment.",
+    "item": null
+}
+```
+
+- `PATCH /api/items/:itemId/comment/:commentId`
+
+This endpoint allows a comment author to edit item comment. It accepts the following request
+payload format:
+
+```
+{
+	"comment": "this is an updated test item comment."
+}
+```
+
+on success, it should return, HTTP response status: **204 No Content** with empty response message body content.
+
+- `DELETE /api/items/:itemId/comment/:commentId`
+
+This endpoint allows a comment author to delete an item comment. It doesn't require any request 
+body payload.
+
+on success, it should return, HTTP response status: **204 No Content** with empty response message body content.
+
