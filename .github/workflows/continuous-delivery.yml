@@ -1,7 +1,9 @@
 name: "Deploy to server"
 
 on:
-  status
+  push:
+    branches: [ main ]
+
 
 env:
   GOPATH: '/go-workspace'
