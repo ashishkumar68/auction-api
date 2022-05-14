@@ -4,22 +4,6 @@ on:
   push:
     branches: [main]
 
-env:
-  GOPATH: '/go-workspace'
-  GOBIN: '${GOPATH}/bin'
-  GOSRC: '${GOPATH}/src'
-  PROJECTDIR: '${GOSRC}/auction-api'
-  #DB_DSN: 'auction_api_app:changeme@tcp(auction_api_db:3306)/auction?charset=utf8mb4&parseTime=True&loc=Local'
-  PORT: 8081
-  # need to set this to "release" in production.
-  #GIN_MODE=debug
-  #HOST=test.auction-api.com
-  #JWT_HS256_KEY=A283FUu327364JHUFN36383====
-  #APP_ENV: ${{ secrets.}}
-  #FILE_UPLOADS_DIR: '${PROJECTDIR}/uploads'
-  # MBs
-  #MAX_UPLOAD_SIZE=128
-
 jobs:
   deploy_on_successful_ci_build:
     runs-on: ubuntu-latest
@@ -37,6 +21,20 @@ jobs:
       - name: Build and push Docker image
         id: docker_build
         uses: docker/build-push-action@v2
+        env:
+          GOPATH: '/go-workspace'
+          GOBIN: '${GOPATH}/bin'
+          GOSRC: '${GOPATH}/src'
+          PROJECTDIR: '${GOSRC}/auction-api'
+          PORT: 8081
+          APP_ENV: ${{ secrets.APP_ENV }}
+          DB_DSN: ${{ secrets.DB_DSN }}
+          GIN_MODE: ${{ secrets.GIN_MODE }}
+          HOST: ${{ secrets.HOST }}
+          JWT_HS256_KEY: ${{ secrets.JWT_HS256_KEY }}
+          MAX_UPLOAD_SIZE: ${{ secrets.MAX_UPLOAD_SIZE }}
+          FILE_UPLOADS_DIR: '${PROJECTDIR}/uploads'
+
         with:
           file: ./.docker/hub/go/Dockerfile
           push: true

@@ -29,10 +29,6 @@ RUN mkdir -p ${GOPATH}/src/
 COPY . ${PROJECTDIR}
 WORKDIR ${PROJECTDIR}
 
-#COPY ./init/docker-entrypoint.sh /entrypoint.sh
-#RUN chmod +x /entrypoint.sh
-#ENTRYPOINT ["/entrypoint.sh"]
-
 RUN go mod download
 RUN go install
 RUN go install github.com/ashishkumar68/auction-api/auction-cli@latest
