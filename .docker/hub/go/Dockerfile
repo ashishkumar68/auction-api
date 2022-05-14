@@ -26,12 +26,16 @@ RUN mkdir -p ${GOPATH}/bin/
 RUN mkdir -p ${GOPATH}/pkg/
 RUN mkdir -p ${GOPATH}/src/
 
-COPY ./init/docker-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+RUN ls -al
 
 COPY . ${PROJECTDIR}
 WORKDIR ${PROJECTDIR}
+
+RUN ls -al
+
+COPY ./init/docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 
 RUN go mod download
 RUN go install
