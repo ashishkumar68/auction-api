@@ -1,11 +1,17 @@
 package migrations
 
 import (
+	"context"
 	"fmt"
+	"github.com/ashishkumar68/auction-api/config"
 	"github.com/ashishkumar68/auction-api/database"
+	"github.com/ashishkumar68/auction-api/migrations/yr2022"
 	"github.com/ashishkumar68/auction-api/models"
+	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"log"
+	"os"
 )
 
 func DropAndCreateTables() {
@@ -55,6 +61,9 @@ END
 }
 
 func ForceTruncateAllTables(db *gorm.DB) {
+	if config.AppEnvTest != os.Getenv("APP_ENV") {
+		log.Fatalln("Force truncate is only allowed in test environment.")
+	}
 	for retry := 1; retry <= 3; retry++ {
 		txErr := db.Transaction(func(tx *gorm.DB) error {
 			if err := db.Exec(`SET foreign_key_checks = 0;`).Error; err != nil {
@@ -88,4 +97,23 @@ func ForceTruncateAllTables(db *gorm.DB) {
 			break
 		}
 	}
+}
+
+func RunMigrations() {
+	database.InitialiseDatabase()
+	db := database.GetDBHandle().WithContext(context.TODO())
+	db.Logger = logger.Default.LogMode(logger.Info)
+
+	m := gormigrate.New(db, gormigrate.DefaultOptions, getAllMigrationsList())
+	if err := m.Migrate(); err != nil {
+		log.Fatalf("Could not migrate: %v", err)
+	}
+	log.Printf("Migrations were executed successfully.")
+}
+
+func getAllMigrationsList() []*gormigrate.Migration {
+	migrations := make([]*gormigrate.Migration, 0)
+	migrations = append(migrations, yr2022.GetMigrationsList()...)
+
+	return migrations
 }

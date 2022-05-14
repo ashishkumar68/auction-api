@@ -20,7 +20,7 @@ func SetupRoutes(engine *gin.Engine) {
 }
 
 func runMigrations() {
-	migrations.DropAndCreateTables()
+	migrations.RunMigrations()
 }
 
 func main() {
