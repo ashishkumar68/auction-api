@@ -2,8 +2,8 @@ name: "Deploy to server"
 
 on:
   push:
-    branches: [ main ]
-
+    tags:
+      - v1.*
 
 env:
   GOPATH: '/go-workspace'
