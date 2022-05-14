@@ -1,0 +1,44 @@
+name: "Deploy to server"
+
+on:
+  status
+
+env:
+  GOPATH: '/go-workspace'
+  GOBIN: '${GOPATH}/bin'
+  GOSRC: '${GOPATH}/src'
+  PROJECTDIR: '${GOSRC}/auction-api'
+  #DB_DSN: 'auction_api_app:changeme@tcp(auction_api_db:3306)/auction?charset=utf8mb4&parseTime=True&loc=Local'
+  PORT: 8081
+  # need to set this to "release" in production.
+  #GIN_MODE=debug
+  #HOST=test.auction-api.com
+  #JWT_HS256_KEY=A283FUu327364JHUFN36383====
+  #APP_ENV: ${{ secrets.}}
+  #FILE_UPLOADS_DIR: '${PROJECTDIR}/uploads'
+  # MBs
+  #MAX_UPLOAD_SIZE=128
+
+jobs:
+  deploy_on_successful_ci_build:
+    runs-on: ubuntu-latest
+    environment: prod
+    if: >-
+      github.event.state == 'success'
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_LOGIN_USERNAME }}
+          password: ${{ secrets.DOCKER_LOGIN_TOKEN }}
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build and push Docker image
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          file: ./.docker/hub/go/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_LOGIN_USERNAME }}/${{ github.event.repository.name }}:latest
