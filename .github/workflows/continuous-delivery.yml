@@ -36,6 +36,7 @@ jobs:
         uses: appleboy/ssh-action@master
         env:
           DOCKER_LOGIN_USERNAME: ${{ secrets.DOCKER_LOGIN_USERNAME }}
+          DOCKER_LOGIN_TOKEN: ${{ secrets.DOCKER_LOGIN_TOKEN }}
           AUCTION_API_REPO: ${{ github.event.repository.name }}
           APP_ENV: ${{ secrets.APP_ENV }}
           PORT: 8081
@@ -62,9 +63,8 @@ jobs:
             newgrp docker
             sudo systemctl enable docker.service
             sudo systemctl enable containerd.service
-            docker login --username ${{ secrets.DOCKER_LOGIN_USERNAME }} --password ${{ secrets.DOCKER_LOGIN_TOKEN }}
+            docker login --username ${{ env.DOCKER_LOGIN_USERNAME }} --password ${{ env.DOCKER_LOGIN_TOKEN }}
             docker pull ${{ env.DOCKER_LOGIN_USERNAME }}/${{ env.AUCTION_API_REPO }}:latest
             docker logout
-            echo ${{ env.TAG }}
 #            docker rm -f auction-api-app
 #            docker run -d -p 80:8081 --name auction-api-app ${{ env.AUCTION_API_REPO }}
