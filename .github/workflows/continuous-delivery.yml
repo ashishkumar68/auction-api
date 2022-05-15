@@ -30,8 +30,7 @@ jobs:
           file: ./.docker/hub/go/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_LOGIN_USERNAME }}/${{ github.event.repository.name }}:latest
-          buildArgs:
-            - "TAG=$$RELEASE_VERSION"
+          buildArgs: TAG=$RELEASE_VERSION
 
       - name: Login to release server and launch container.
         uses: appleboy/ssh-action@master
