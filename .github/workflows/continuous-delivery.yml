@@ -9,14 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     steps:
-      - name: see what's what
-        run: |
-          echo ${{ secrets.DEPLOY_HOST_PROD }}
-          echo ${{ secrets.DEPLOY_HOST_SSH_USERNAME }}
-          echo ${{ secrets.DEPLOY_HOST_SSH_PORT }}
-          echo ${{ secrets.DEPLOY_HOST_SSH_KEY }}
       - name: Login to release server.
-        uses: appleboy/ssh-action@v0.1.3
+        uses: appleboy/ssh-action@v0.1.4
         with:
           host: ${{ secrets.DEPLOY_HOST_PROD }}
           username: ${{ secrets.DEPLOY_HOST_SSH_USERNAME }}
