@@ -9,11 +9,47 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     steps:
-      - name: Login to release server.
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_LOGIN_USERNAME }}
+          password: ${{ secrets.DOCKER_LOGIN_TOKEN }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Test
+        run: |
+          echo $RELEASE_VERSION
+          echo ${{ env.RELEASE_VERSION }}  
+
+      - name: Build and push Docker image
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          file: ./.docker/hub/go/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_LOGIN_USERNAME }}/${{ github.event.repository.name }}:latest
+          buildArgs:
+            TAG: ${{ env.RELEASE_VERSION }}
+
+      - name: Login to release server and launch container.
         uses: appleboy/ssh-action@master
         env:
           DOCKER_LOGIN_USERNAME: ${{ secrets.DOCKER_LOGIN_USERNAME }}
           AUCTION_API_REPO: ${{ github.event.repository.name }}
+          APP_ENV: ${{ secrets.APP_ENV }}
+          PORT: 8081
+          DB_DSN: ${{ secrets.DB_DSN }}
+          GIN_MODE: ${{ secrets.GIN_MODE }}
+          JWT_HS256_KEY: ${{ secrets.JWT_HS256_KEY }}
+          MAX_UPLOAD_SIZE: ${{ secrets.MAX_UPLOAD_SIZE }}
+          FILE_UPLOADS_DIR: '${PROJECTDIR}/uploads'
+#          GOPATH: '/go-workspace'
+#          GOBIN: '${GOPATH}/bin'
+#          GOSRC: '${GOPATH}/src'
+#          PROJECTDIR: '${GOSRC}/auction-api'
+#          HOST: ${{ secrets.HOST }}
         with:
           host: ${{ secrets.DEPLOY_HOST_PROD }}
           username: ${{ secrets.DEPLOY_HOST_SSH_USERNAME }}
@@ -30,36 +66,6 @@ jobs:
             docker login --username ${{ secrets.DOCKER_LOGIN_USERNAME }} --password ${{ secrets.DOCKER_LOGIN_TOKEN }}
             docker pull ${{ env.DOCKER_LOGIN_USERNAME }}/${{ env.AUCTION_API_REPO }}:latest
             docker logout
+            echo ${{ env.TAG }}
 #            docker rm -f auction-api-app
 #            docker run -d -p 80:8081 --name auction-api-app ${{ env.AUCTION_API_REPO }}
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_LOGIN_USERNAME }}
-          password: ${{ secrets.DOCKER_LOGIN_TOKEN }}
-
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Build and push Docker image
-        id: docker_build
-        uses: docker/build-push-action@v2
-        env:
-          GOPATH: '/go-workspace'
-          GOBIN: '${GOPATH}/bin'
-          GOSRC: '${GOPATH}/src'
-          PROJECTDIR: '${GOSRC}/auction-api'
-          PORT: 8081
-          APP_ENV: ${{ secrets.APP_ENV }}
-          DB_DSN: ${{ secrets.DB_DSN }}
-          GIN_MODE: ${{ secrets.GIN_MODE }}
-          HOST: ${{ secrets.HOST }}
-          JWT_HS256_KEY: ${{ secrets.JWT_HS256_KEY }}
-          MAX_UPLOAD_SIZE: ${{ secrets.MAX_UPLOAD_SIZE }}
-          FILE_UPLOADS_DIR: '${PROJECTDIR}/uploads'
-
-        with:
-          file: ./.docker/hub/go/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_LOGIN_USERNAME }}/${{ github.event.repository.name }}:latest
