@@ -1,13 +1,17 @@
-FROM golang:1.18-alpine
+FROM golang:1.18
 
-RUN runtimeDeps=" \
+RUN buildDeps=" \
+        lsb-release \
+    " \
+    runtimeDeps=" \
         curl \
+        git \
         vim \
         nano \
         htop \
         net-tools \
     " \
-    && apk update && apk add -y $runtimeDeps
+    && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y $buildDeps $runtimeDeps
 
 ARG TAG=latest
 ARG UPLOADS_DIR=${HOME}/uploads
