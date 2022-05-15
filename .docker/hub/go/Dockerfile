@@ -38,7 +38,7 @@ EXPOSE 8081
 #WORKDIR ${PROJECTDIR}
 
 #RUN go mod download
-RUN go install github.com/ashishkumar68/auction-api@${TAG}
-RUN go install github.com/ashishkumar68/auction-api/auction-cli@${TAG}
+RUN go install github.com/ashishkumar68/auction-api@latest
+RUN go install github.com/ashishkumar68/auction-api/auction-cli@latest
 
 CMD ["auction-api"]
