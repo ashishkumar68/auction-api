@@ -44,7 +44,6 @@ jobs:
           GIN_MODE: ${{ secrets.GIN_MODE }}
           JWT_HS256_KEY: ${{ secrets.JWT_HS256_KEY }}
           MAX_UPLOAD_SIZE: ${{ secrets.MAX_UPLOAD_SIZE }}
-          FILE_UPLOADS_DIR: '${PROJECTDIR}/uploads'
 #          GOPATH: '/go-workspace'
 #          GOBIN: '${GOPATH}/bin'
 #          GOSRC: '${GOPATH}/src'
@@ -63,6 +62,8 @@ jobs:
             newgrp docker
             sudo systemctl enable docker.service
             sudo systemctl enable containerd.service
+            docker rm -f auction-api-app
+            docker rmi -f ${{ env.DOCKER_LOGIN_USERNAME }}/${{ env.AUCTION_API_REPO }}
             docker login --username ${{ env.DOCKER_LOGIN_USERNAME }} --password ${{ env.DOCKER_LOGIN_TOKEN }}
             docker pull ${{ env.DOCKER_LOGIN_USERNAME }}/${{ env.AUCTION_API_REPO }}:latest
             docker logout
