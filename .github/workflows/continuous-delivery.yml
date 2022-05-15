@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  build-release-image:
+  deploy-to-release-server:
     runs-on: ubuntu-latest
     environment: prod
     steps:
@@ -40,18 +40,14 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_LOGIN_USERNAME }}/${{ github.event.repository.name }}:latest
 
-  launch-container-on-prod:
-    runs-on: ubuntu-latest
-    environment: prod
-    steps:
       - name: Login to release server.
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DEPLOY_HOST_PROD }}
-          username: ${{ secrets.DEPLOY_HOST_SSH_USERNAME }}
-          key: ${{ secrets.DEPLOY_HOST_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_HOST_SSH_PORT }}
-          script: |
-            whoami
-            ls -al
-            printenv
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.DEPLOY_HOST_PROD }}
+            username: ${{ secrets.DEPLOY_HOST_SSH_USERNAME }}
+            key: ${{ secrets.DEPLOY_HOST_SSH_KEY }}
+            port: ${{ secrets.DEPLOY_HOST_SSH_PORT }}
+            script: |
+              whoami
+              ls -al
+              printenv
