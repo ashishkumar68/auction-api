@@ -16,7 +16,7 @@ jobs:
           DOCKER_LOGIN_TOKEN: ${{ secrets.DOCKER_LOGIN_TOKEN }}
           AUCTION_API_REPO: ${{ github.event.repository.name }}
           APP_ENV: ${{ secrets.APP_ENV }}
-          #PORT: 8081
+          APP_PORT: ${{ secrets.APP_PORT }}
           DB_DSN: ${{ secrets.DB_DSN }}
           GIN_MODE: ${{ secrets.GIN_MODE }}
           JWT_HS256_KEY: ${{ secrets.JWT_HS256_KEY }}
@@ -44,6 +44,17 @@ jobs:
             docker login --username ${{ env.DOCKER_LOGIN_USERNAME }} --password ${{ env.DOCKER_LOGIN_TOKEN }}
             docker pull ${{ env.DOCKER_LOGIN_USERNAME }}/${{ env.AUCTION_API_REPO }}:latest
             docker logout
+            docker rm -f auction-api-app
+            docker run -d -p 80:8081 \
+            -e APP_ENV=${{ env.APP_ENV }} \
+            -e DB_DSN=${{ env.DB_DSN }} \
+            -e PORT=${{ env.APP_PORT }} \
+            -e MAX_UPLOAD_SIZE=${{ env.MAX_UPLOAD_SIZE }} \
+            -e GIN_MODE=${{ env.GIN_MODE }} \
+            -e JWT_HS256_KEY=${{ env.JWT_HS256_KEY }} \
+            -e FILE_UPLOADS_DIR='$HOME/uploads' \
+            -e GIN_MODE=${{ env.GIN_MODE }} \
+            --name auction-api-app ${{ env.AUCTION_API_REPO }}
 #      - name: Login to Docker Hub
 #        uses: docker/login-action@v1
 #        with:
