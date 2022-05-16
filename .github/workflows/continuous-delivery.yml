@@ -16,7 +16,7 @@ jobs:
           DOCKER_LOGIN_TOKEN: ${{ secrets.DOCKER_LOGIN_TOKEN }}
           AUCTION_API_REPO: ${{ github.event.repository.name }}
           APP_ENV: ${{ secrets.APP_ENV }}
-          PORT: 8081
+          #PORT: 8081
           DB_DSN: ${{ secrets.DB_DSN }}
           GIN_MODE: ${{ secrets.GIN_MODE }}
           JWT_HS256_KEY: ${{ secrets.JWT_HS256_KEY }}
