@@ -16,12 +16,12 @@ jobs:
           password: ${{ secrets.DOCKER_LOGIN_TOKEN }}
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set env
+      - name: Set release version.
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: Test
-        run: |
-          echo $RELEASE_VERSION
-          echo ${{ env.RELEASE_VERSION }}
+#      - name: Test
+#        run: |
+#          echo $RELEASE_VERSION
+#          echo ${{ env.RELEASE_VERSION }}
 
       - name: Build and push Docker image
         id: docker_build
@@ -70,6 +70,5 @@ jobs:
             -e MAX_UPLOAD_SIZE=${{ env.MAX_UPLOAD_SIZE }} \
             -e GIN_MODE=${{ env.GIN_MODE }} \
             -e JWT_HS256_KEY=${{ env.JWT_HS256_KEY }} \
-            -e FILE_UPLOADS_DIR='/uploads' \
             -e GIN_MODE=${{ env.GIN_MODE }} \
             --name auction-api-app ${{ env.DOCKER_LOGIN_USERNAME }}/${{ env.AUCTION_API_REPO }}:latest 
