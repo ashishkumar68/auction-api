@@ -43,7 +43,7 @@ func (suite *UserTestSuite) SetupSuite() {
 	suite.indexRoute = "/"
 	suite.apiBaseRoute = "/api"
 	suite.contentTypeJson = "application/json"
-	suite.userRoute = fmt.Sprintf("%s://%s:%s%s/user", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
+	suite.userRoute = fmt.Sprintf("%s://%s:%s%s/users", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
 }
 
 // SetupTest runs before each test.

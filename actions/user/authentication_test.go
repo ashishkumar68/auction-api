@@ -24,7 +24,7 @@ type LoginResponseBody struct {
 }
 
 func (suite *UserTestSuite) TestRegisterNewUser() {
-	registerRoute := fmt.Sprintf("%s://%s:%s%s/user/register", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
+	registerRoute := fmt.Sprintf("%s/register", suite.userRoute)
 	email := "johndoe123@abc.com"
 
 	var user models.User
@@ -73,7 +73,7 @@ func (suite *UserTestSuite) TestLogin() {
 INSERT INTO users(uuid, created_at, updated_at, first_name, last_name, email, password) 
 VALUES (uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmithtest@abc.com", "$2a$10$3QxDjD1ylgPnRgQLhBrTaeqdsNaLxkk7gpdsFGUheGU2k.l.5OIf6")
 `)
-	loginRoute := fmt.Sprintf("%s://%s:%s%s/user/login", suite.protocol, suite.host, suite.port, suite.apiBaseRoute)
+	loginRoute := fmt.Sprintf("%s/login", suite.userRoute)
 
 	invalidEmail := "blablaemail@abc.bla"
 	existingUser := suite.repository.FindUserByEmail(invalidEmail)
