@@ -7,7 +7,7 @@ import (
 )
 
 func MapUserRoutes(authGroup *gin.RouterGroup) {
-	userTxRouteGroup := authGroup.Group("/user", middleware.TransactionRoute())
+	userTxRouteGroup := authGroup.Group("/users", middleware.TransactionRoute())
 
 	userTxRouteGroup.POST("/register", user.RegisterUser)
 	userTxRouteGroup.POST("/login", user.LoginUser)
