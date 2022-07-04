@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/ashishkumar68/auction-api/config"
-	"github.com/ashishkumar68/auction-api/middleware"
 	"github.com/ashishkumar68/auction-api/migrations"
 	"github.com/ashishkumar68/auction-api/routes"
 	"github.com/ashishkumar68/auction-api/validators"
@@ -18,7 +17,8 @@ import (
 )
 
 func SetupRoutes(engine *gin.Engine) {
-	apiGroup := engine.Group("/api", middleware.CorsRoute())
+	apiGroup := engine.Group("/api")
+
 	routes.MapIndexRoutes(engine)
 	routes.MapUserRoutes(apiGroup)
 	routes.MapItemRoutes(apiGroup)
