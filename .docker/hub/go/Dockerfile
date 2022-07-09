@@ -14,12 +14,12 @@ RUN buildDeps=" \
     && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y $buildDeps $runtimeDeps
 
 ARG TAG=latest
-ARG FILE_UPLOADS_DIR=$HOME/uploads
+ARG FILE_UPLOADS_DIR="/auction-api/uploads"
 
 ENV FILE_UPLOADS_DIR=$FILE_UPLOADS_DIR
 
-RUN mkdir -p ${FILE_UPLOADS_DIR}
-RUN chmod 755 -R ${FILE_UPLOADS_DIR}
+#RUN mkdir -p ${FILE_UPLOADS_DIR}
+#RUN chmod 755 -R ${FILE_UPLOADS_DIR}
 
 EXPOSE 8081
 
