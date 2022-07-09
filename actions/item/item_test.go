@@ -161,6 +161,8 @@ INSERT INTO reactions (uuid,created_at,updated_at,deleted_at,version,created_by,
 	assert.Len(suite.T(), items, 2)
 	assert.Contains(suite.T(), items[0].Name, "ABC Item")
 	assert.Contains(suite.T(), items[1].Name, "ABC Item")
+	assert.Equal(suite.T(), models.ItemCategoryAppliancesString, items[0].CategoryText)
+	assert.Equal(suite.T(), models.ItemCategoryAppliancesString, items[1].CategoryText)
 	assert.NotNil(suite.T(), items[0].Reactions)
 	assert.Equal(suite.T(), []models.ItemReactionTypeCount{
 		{
