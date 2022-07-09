@@ -20,6 +20,13 @@ const (
 	ItemCategoryArtString         = "Art"
 )
 
+var itemCategoryMap = map[ItemCategory]string{
+	CategoryElectronicsInt: ItemCategoryElectronicsString,
+	CategoryAppliancesInt:  ItemCategoryAppliancesString,
+	CategoryHomeInt:        ItemCategoryHomeString,
+	CategoryArtInt:         ItemCategoryArtString,
+}
+
 var (
 	EmptyItemBidUserError   = fmt.Errorf("placing item bid requires a user but was found empty")
 	DetectedPastLastBidDate = fmt.Errorf("can not set last bid date in the past")
@@ -31,13 +38,14 @@ type ItemCategory uint8
 type Item struct {
 	IdentityAuditableModel
 
-	Name        string       `gorm:"type:varchar(512)" json:"name"`
-	Description string       `gorm:"type:varchar(1024)" json:"description"`
-	Category    ItemCategory `gorm:"type:smallint" json:"category"`
-	BrandName   string       `gorm:"type:varchar(1024)" json:"brandName"`
-	MarketValue Value        `gorm:"type:float(16,4)" json:"marketValue"`
-	LastBidDate time.Time    `gorm:"column:last_bid_date;type:date;not null" json:"lastBidDate"`
-	OffBid      bool         `gorm:"column:off_bid;type:tinyint(1);not null;default:0" json:"isOffBid"`
+	Name         string       `gorm:"type:varchar(512)" json:"name"`
+	Description  string       `gorm:"type:varchar(1024)" json:"description"`
+	Category     ItemCategory `gorm:"type:smallint" json:"category"`
+	CategoryText string       `gorm:"-" json:"categoryText"`
+	BrandName    string       `gorm:"type:varchar(1024)" json:"brandName"`
+	MarketValue  Value        `gorm:"type:float(16,4)" json:"marketValue"`
+	LastBidDate  time.Time    `gorm:"column:last_bid_date;type:date;not null" json:"lastBidDate"`
+	OffBid       bool         `gorm:"column:off_bid;type:tinyint(1);not null;default:0" json:"isOffBid"`
 
 	Bids       []Bid
 	ItemImages []*ItemImage            `json:"itemImages"`
@@ -201,17 +209,5 @@ type ItemReactionTypeCount struct {
 }
 
 func GetItemCategoryString(itemCategory ItemCategory) string {
-	var category string
-	switch itemCategory {
-	case CategoryElectronicsInt:
-		category = ItemCategoryElectronicsString
-	case CategoryAppliancesInt:
-		category = ItemCategoryAppliancesString
-	case CategoryHomeInt:
-		category = ItemCategoryHomeString
-	case CategoryArtInt:
-		category = ItemCategoryArtString
-	}
-
-	return category
+	return itemCategoryMap[itemCategory]
 }

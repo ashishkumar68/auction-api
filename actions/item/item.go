@@ -42,12 +42,11 @@ func ListItems(c *gin.Context) {
 	var items []*models.Item
 	page := pg.With(repository.ListItems()).Request(c.Request).Response(&items)
 	itemReactionMap := repository.FindReactionsCountByItems(items)
-	log.Println("item reactions are: ", itemReactionMap)
 	for _, item := range items {
 		if itemReactions, ok := itemReactionMap[item.ID]; ok {
 			item.Reactions = itemReactions
 		}
-		log.Println("Item:", *item)
+		item.CategoryText = models.GetItemCategoryString(item.Category)
 	}
 
 	c.JSON(http.StatusOK, page)
