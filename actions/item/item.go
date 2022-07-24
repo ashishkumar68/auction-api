@@ -47,6 +47,9 @@ func ListItems(c *gin.Context) {
 			item.Reactions = itemReactions
 		}
 		item.CategoryText = models.GetItemCategoryString(item.Category)
+		for _, itemImg := range item.ItemImages {
+			itemImg.Url = BuildItemImageRoute(*itemImg)
+		}
 	}
 
 	c.JSON(http.StatusOK, page)
@@ -166,6 +169,9 @@ func AddItemImages(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": actions.InternalServerErrMsg})
 		}
 		return
+	}
+	for _, itemImg := range itemImages {
+		itemImg.Url = BuildItemImageRoute(*itemImg)
 	}
 
 	c.JSON(http.StatusCreated, itemImages)
