@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/ashishkumar68/auction-api/actions"
 	"github.com/ashishkumar68/auction-api/client"
 	"github.com/ashishkumar68/auction-api/models"
 	"github.com/ashishkumar68/auction-api/response"
@@ -94,10 +95,17 @@ INSERT INTO users(id, uuid, created_at, updated_at, first_name, last_name, email
 `)
 	suite.DB.Exec(`
 INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, description, category, brand_name, market_value, last_bid_date) VALUES
-(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
+(1, "581b7c3c-3fa8-4642-801b-30f63111f621",'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'ABC Item 1','Item 1 Description','1','ABC','20000', "2099-01-01"),
 (2, uuid_v4(),'2022-04-06 06:46:03.528','2022-04-06 06:46:03.528',NULL,1,5,5,NULL,'ABC Item 2','Item 2 Description','1','ABC','22000', "2099-01-01")
 ;
 `)
+	suite.DB.Exec(`
+INSERT INTO item_images (id, uuid, created_at, updated_at, deleted_at, version, created_by, updated_by, deleted_by, name, path, item_id) VALUES
+(1, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'guitar_2_abc.jpg',"items/581b7c3c-3fa8-4642-801b-30f63111f621/images/guitar_2_abc.jpg", 1),
+(2, uuid_v4(),'2022-04-06 05:46:03.528','2022-04-06 05:46:03.528',NULL,1,5,5,NULL,'guitar_1_abc.jpg',"items/581b7c3c-3fa8-4642-801b-30f63111f621/images/guitar_1_abc.jpg", 1)
+;
+`)
+
 	suite.DB.Exec(`
 INSERT INTO reactions (uuid,created_at,updated_at,deleted_at,version,created_by,updated_by,deleted_by,item_id,type) VALUES 
 (uuid_v4(), NOW(), NOW(), NULL, 1, 5, 5, NULL, 1, 0),
@@ -164,6 +172,8 @@ INSERT INTO reactions (uuid,created_at,updated_at,deleted_at,version,created_by,
 	assert.Equal(suite.T(), models.ItemCategoryAppliancesString, items[0].CategoryText)
 	assert.Equal(suite.T(), models.ItemCategoryAppliancesString, items[1].CategoryText)
 	assert.NotNil(suite.T(), items[0].Reactions)
+	assert.Len(suite.T(), items[0].ItemImages, 2)
+
 	assert.Equal(suite.T(), []models.ItemReactionTypeCount{
 		{
 			ReactionType:     models.ReactionTypeLike,
@@ -187,6 +197,15 @@ INSERT INTO reactions (uuid,created_at,updated_at,deleted_at,version,created_by,
 			ReactionCount:    2,
 			ReactionTypeText: models.ReactionTypeDislikeString,
 		}}, items[1].Reactions)
+
+	assert.NotEqual(suite.T(), "", items[0].ItemImages[0].Url)
+
+	for _, image := range items[0].ItemImages {
+		assert.Equal(
+			suite.T(), fmt.Sprintf("%s://%s%s%s/%d/images/%d", "http", os.Getenv("HOST"), actions.BaseApiRoute, BaseItemsRoute, items[0].ID, image.ID),
+			image.Url,
+		)
+	}
 }
 
 func (suite *ItemTestSuite) TestListItemsAsLoggedInUser() {
@@ -514,6 +533,11 @@ INSERT INTO items (id, uuid, created_at, updated_at, deleted_at, version, create
 	assert.Len(suite.T(), itemImages, 2)
 	assert.NotNil(suite.T(), itemImages[0].ID)
 	assert.NotEqual(suite.T(), "", itemImages[0].Name)
+	assert.Equal(
+		suite.T(),
+		fmt.Sprintf("%s://%s%s%s/%d/images/%d", "http", os.Getenv("HOST"), actions.BaseApiRoute, BaseItemsRoute, itemImages[0].ItemId, itemImages[0].ID),
+		itemImages[0].Url,
+	)
 
 	itemImages = suite.repository.FindItemImages(item)
 	assert.Len(suite.T(), itemImages, 2)

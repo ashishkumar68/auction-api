@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/ashishkumar68/auction-api/actions"
+	"github.com/ashishkumar68/auction-api/actions/item"
+	"github.com/ashishkumar68/auction-api/actions/user"
 	"github.com/ashishkumar68/auction-api/config"
 	"github.com/ashishkumar68/auction-api/migrations"
-	"github.com/ashishkumar68/auction-api/routes"
 	"github.com/ashishkumar68/auction-api/validators"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -17,11 +19,11 @@ import (
 )
 
 func SetupRoutes(engine *gin.Engine) {
-	apiGroup := engine.Group("/api")
+	apiGroup := engine.Group(actions.BaseApiRoute)
 
-	routes.MapIndexRoutes(engine)
-	routes.MapUserRoutes(apiGroup)
-	routes.MapItemRoutes(apiGroup)
+	actions.MapIndexRoutes(engine)
+	user.MapUserRoutes(apiGroup)
+	item.MapItemRoutes(apiGroup)
 }
 
 func runMigrations() {

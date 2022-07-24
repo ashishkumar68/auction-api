@@ -22,11 +22,12 @@ type ItemImage struct {
 	IdentityAuditableModel
 
 	Path             string                `gorm:"column:path;not null" json:"-"`
-	ItemId           uint                  `gorm:"column:item_id;index" json:"-"`
+	ItemId           uint                  `gorm:"column:item_id;index" json:"itemId"`
 	Item             *Item                 `gorm:"foreignKey:ItemId" json:"item"`
 	MultiPartImgFile *multipart.FileHeader `gorm:"-" json:"-"`
 	Name             string                `gorm:"column:name;not null" json:"name"`
 	IsThumbnail      bool                  `gorm:"column:is_thumbnail;type:tinyint(1);not null;default:0" json:"isThumbnail"`
+	Url              string                `gorm:"-" json:"url"`
 }
 
 func (ItemImage) TableName() string {
