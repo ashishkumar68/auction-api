@@ -46,6 +46,7 @@ jobs:
           MAX_UPLOAD_SIZE: ${{ secrets.MAX_UPLOAD_SIZE }}
           UPLOADS_VOLUME: ${{ secrets.UPLOADS_VOLUME }}
           UPLOADS_VOLUME_NAME: ${{ secrets.UPLOADS_VOLUME_NAME }}
+          HOST: ${{ secrets.HOST }}
         with:
           host: ${{ secrets.DEPLOY_HOST_PROD }}
           username: ${{ secrets.DEPLOY_HOST_SSH_USERNAME }}
@@ -75,5 +76,6 @@ jobs:
             -e GIN_MODE=${{ env.GIN_MODE }} \
             -e JWT_HS256_KEY=${{ env.JWT_HS256_KEY }} \
             -e GIN_MODE=${{ env.GIN_MODE }} \
+            -e HOST=${{ env.HOST }} \
             -v ${{ env.UPLOADS_VOLUME_NAME }}:${{ env.UPLOADS_VOLUME }} \
             --name auction-api-app ${{ env.DOCKER_LOGIN_USERNAME }}/${{ env.AUCTION_API_REPO }}:latest 
