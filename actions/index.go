@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
+	"os"
 )
 
 var (
@@ -24,6 +25,10 @@ var (
 
 func IndexAction(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
+}
+
+func FetchBuildVersionAction(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"version": os.Getenv("VERSION")})
 }
 
 func GetDBConnectionByContext(c *gin.Context) *gorm.DB {
