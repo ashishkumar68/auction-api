@@ -31,6 +31,10 @@ func FetchBuildVersionAction(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"version": os.Getenv("VERSION")})
 }
 
+func TestHelloAction(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "Hello from test route."})
+}
+
 func GetDBConnectionByContext(c *gin.Context) *gorm.DB {
 	var dbConn *gorm.DB
 	if db, ok := c.Get("db"); ok {
