@@ -13,4 +13,5 @@ func MapIndexRoutes(engine *gin.Engine) {
 	engine.OPTIONS("/", CorsRoute())
 
 	engine.GET("/version", FetchBuildVersionAction)
+	engine.GET("/test", TestHelloAction)
 }
