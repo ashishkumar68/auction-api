@@ -28,7 +28,7 @@ func IndexAction(c *gin.Context) {
 }
 
 func FetchBuildVersionAction(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"version": os.Getenv("VERSION")})
+	c.JSON(http.StatusOK, gin.H{"version12": os.Getenv("VERSION")})
 }
 
 func TestHelloAction(c *gin.Context) {
