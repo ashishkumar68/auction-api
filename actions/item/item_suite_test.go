@@ -98,9 +98,9 @@ VALUES (5, uuid_v4(), NOW(), NOW(), "John", "Smith", "johnsmith24@abc.com", "$2a
 }
 
 func (suite *ItemTestSuite) TearDownTest() {
-	migrations.ForceTruncateAllTables(suite.DB)
-	err := os.RemoveAll(suite.baseFSItemsPath)
-	assert.Nil(suite.T(), err, fmt.Sprintf("could not clear items base path: %s", suite.baseFSItemsPath))
+	//migrations.ForceTruncateAllTables(suite.DB)
+	//err := os.RemoveAll(suite.baseFSItemsPath)
+	//assert.Nil(suite.T(), err, fmt.Sprintf("could not clear items base path: %s", suite.baseFSItemsPath))
 }
 
 func TestItemTestSuite(t *testing.T) {
