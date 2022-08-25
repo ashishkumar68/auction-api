@@ -274,7 +274,7 @@ func GetItemImage(c *gin.Context) {
 		return
 	}
 	itemService := services.NewItemService(db)
-	_, filePath, err := itemService.GetItemImage(c, itemImg)
+	fileName, filePath, err := itemService.GetItemImage(c, itemImg)
 	if err != nil {
 		log.Println(fmt.Sprintf("Could not find item image due to err: %s", err.Error()))
 		c.JSON(http.StatusNotFound, gin.H{"error": models.ItemImageNotFoundErr.Error()})
@@ -282,8 +282,8 @@ func GetItemImage(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", "application/octet-stream")
-	// don't want to force download.
-	//c.Header("Content-Disposition", "attachment; filename="+fileName)
+	// inline view image.
+	c.Header("Content-Disposition", "inline; filename="+fileName)
 	c.Header("Content-Transfer-Encoding", "binary")
 	c.Header("Cache-Control", "no-cache")
 	c.File(filePath)
